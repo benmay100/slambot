@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+
+<!-- Generated using onshape-to-robot -->
+<!-- Onshape document_id: c4aa493c9127ef72e4e641df -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+ <!-- Link lidar -->
+  <link name="lidar_link">
+    <inertial>
+      <origin xyz="1.0786e-18 -3.85186e-34 -0.0125" rpy="0 0 0"/>
+      <mass value="0.101214"/>
+      <inertia ixx="3.62684e-05" ixy="0" ixz="0" iyy="3.62684e-05" iyz="0" izz="6.19937e-05"/>
+    </inertial>
+    <!-- Part lidar -->
+    <visual>
+      <origin xyz="0 2.14313e-18 0" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/lidar.stl"/>
+      </geometry>
+      <material name="lidar_material">
+        <color rgba="0.262745 0.282353 0.301961 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 2.14313e-18 0" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/lidar.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from chassis to lidar -->
+  <joint name="lidar_joint" type="fixed">
+    <origin xyz="-2.08167e-17 -8.72618e-18 0.072" rpy="3.14159 -0 0"/>
+    <parent link="chassis_link"/>
+    <child link="lidar_link"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="100"/>
+  </joint>
+
+</robot>

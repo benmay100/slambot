@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+
+<!-- Generated using onshape-to-robot -->
+<!-- Onshape document_id: c4aa493c9127ef72e4e641df -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Link camera -->
+  <link name="camera_mount_link">
+    <inertial>
+      <origin xyz="0 -5.78241e-19 -0.005" rpy="0 0 0"/>
+      <mass value="0.004208"/>
+      <inertia ixx="1.75333e-07" ixy="0" ixz="0" iyy="1.75333e-07" iyz="0" izz="2.80533e-07"/>
+    </inertial>
+    <!-- Part camera -->
+    <visual>
+      <origin xyz="0 2.71051e-19 -0.01" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/camera.stl"/>
+      </geometry>
+      <material name="camera_material">
+        <color rgba="0.980392 0.713725 0.00392157 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 2.71051e-19 -0.01" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/camera.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from chassis to camera -->
+  <joint name="camera_mount_joint" type="fixed">
+    <!--<origin xyz="0.0875 0 0.0335" rpy="-3.14159 1.5708 0"/>-->
+    <origin xyz="0.0875 0 0.0335" rpy="0 0 0"/>
+    <parent link="chassis_link"/>
+    <child link="camera_mount_link"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="100"/>
+  </joint>
+
+<!--THIS IS A FIX TO CHANGE THE ORIENTATION SO IT WORKS WITH OPENCV (ALWAYS INCLUDE)
+  generate an optical frame 
+  http://www.ros.org/reps/rep-0103.html#suffix-frames
+  so that ros and opencv can operate on the camera frame correctly -->
+  <link name="camera_optical_link">
+  </link>
+
+  <joint name="camera_optical_joint" type="fixed">
+      <!-- these values have to be these values otherwise the gazebo camera
+          image won't be aligned properly with the frame it is supposedly
+          originating from -->
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+      <parent link="camera_mount_link"/>
+      <child link="camera_optical_link"/>
+  </joint>
+
+
+</robot>

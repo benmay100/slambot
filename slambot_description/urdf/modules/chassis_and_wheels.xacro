@@ -1,0 +1,171 @@
+<?xml version="1.0" ?>
+
+<!-- Generated using onshape-to-robot -->
+<!-- Onshape document_id: c4aa493c9127ef72e4e641df -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- THIS WAS ADDED IN MANUALLY -->
+<!-- Link base footprint -->
+<link name="base_footprint"/>
+<!-- Joint base footprint -->
+<joint name="base_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="chassis_link" />
+    <origin xyz="0 0 0.045" rpy="0 0 0" />
+</joint>
+
+
+<!-- Link chassis -->
+  <link name="chassis_link">
+    <inertial>
+      <origin xyz="-0.00515019 1.96522e-17 0.0424366" rpy="0 0 0"/>
+      <mass value="0.875175"/>
+      <inertia ixx="0.00180946" ixy="0" ixz="-0.000238365" iyy="0.0034597" iyz="0" izz="0.00365777"/>
+    </inertial>
+    <!-- Part chassis -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/chassis.stl"/>
+      </geometry>
+      <material name="chassis_material">
+        <color rgba="0.615686 0.811765 0.929412 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/chassis.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link caster_frame -->
+  <link name="caster_frame_link">
+    <inertial>
+      <origin xyz="-0.0029329 -8.67362e-19 0.0118246" rpy="0 0 0"/>
+      <mass value="0.016201"/>
+      <inertia ixx="1.41785e-06" ixy="0" ixz="4.45185e-07" iyy="1.44032e-06" iyz="0" izz="9.86385e-07"/>
+    </inertial>
+    <!-- Part caster_frame -->
+    <visual>
+      <origin xyz="-0.0075 -0.0075 0.005" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/caster_frame.stl"/>
+      </geometry>
+      <material name="caster_frame_material">
+        <color rgba="0.8 0.8 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0075 -0.0075 0.005" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/caster_frame.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link caster_wheel -->
+  <link name="caster_wheel_link">
+    <inertial>
+      <origin xyz="0 -1.22647e-18 0.0085" rpy="0 0 0"/>
+      <mass value="0.00708604"/>
+      <inertia ixx="4.19152e-07" ixy="0" ixz="0" iyy="4.19152e-07" iyz="0" izz="7.31918e-07"/>
+    </inertial>
+    <!-- Part caster_wheel -->
+    <visual>
+      <origin xyz="0 0 0.0085" rpy="1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/caster_wheel.stl"/>
+      </geometry>
+      <material name="caster_wheel_material">
+        <color rgba="0.956863 0.945098 0.945098 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.0085" rpy="1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/caster_wheel.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from caster_frame to caster_wheel -->
+  <joint name="caster_wheel_joint" type="continuous">
+    <origin xyz="-0.0110526 0.0085 0.024" rpy="1.5708 -0 0"/>
+    <parent link="caster_frame_link"/>
+    <child link="caster_wheel_link"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="100"/>
+  </joint>
+  <!-- Joint from chassis to caster_frame -->
+  <joint name="caster_frame_joint" type="continuous">
+    <origin xyz="0.07 -1.04083e-17 -0.006" rpy="3.14159 -0 0"/>
+    <parent link="chassis_link"/>
+    <child link="caster_frame_link"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="100"/>
+  </joint>
+  <!-- Link right_wheel -->
+  <link name="right_wheel_link">
+    <inertial>
+      <origin xyz="-2.40006e-17 1.14016e-17 0.0247872" rpy="0 0 0"/>
+      <mass value="0.0742142"/>
+      <inertia ixx="2.86673e-05" ixy="0" ixz="0" iyy="2.86673e-05" iyz="0" izz="5.11084e-05"/>
+    </inertial>
+    <!-- Part right_wheel -->
+    <visual>
+      <origin xyz="0 0 0.035" rpy="-1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/driven_wheel.stl"/>
+      </geometry>
+      <material name="driven_wheel_material">
+        <color rgba="0.647059 0.647059 0.647059 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.035" rpy="-1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/driven_wheel.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from chassis to right_wheel -->
+  <joint name="right_wheel_joint" type="continuous">
+    <origin xyz="-0.0561509 -0.0415 -0.01" rpy="1.5708 -0 0"/>
+    <parent link="chassis_link"/>
+    <child link="right_wheel_link"/>
+    <axis xyz="0 0 -1"/>
+    <limit effort="100" velocity="100"/>
+  </joint>
+  <!-- Link left_wheel -->
+  <link name="left_wheel_link">
+    <inertial>
+      <origin xyz="-2.40006e-17 1.14016e-17 0.0247872" rpy="0 0 0"/>
+      <mass value="0.0742142"/>
+      <inertia ixx="2.86673e-05" ixy="0" ixz="0" iyy="2.86673e-05" iyz="0" izz="5.11084e-05"/>
+    </inertial>
+    <!-- Part left_wheel -->
+    <visual>
+      <origin xyz="0 0 0.035" rpy="-1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/driven_wheel.stl"/>
+      </geometry>
+      <material name="driven_wheel_2_material">
+        <color rgba="0.647059 0.647059 0.647059 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.035" rpy="-1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://slambot_description/assets/driven_wheel.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from chassis to left_wheel -->
+  <joint name="left_wheel_joint" type="continuous">
+    <origin xyz="-0.0561509 0.0415 -0.01" rpy="-1.5708 -0 0"/>
+    <parent link="chassis_link"/>
+    <child link="left_wheel_link"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="100"/>
+  </joint>
+
+</robot>
