@@ -18,7 +18,7 @@
             <max_linear_acceleration>10</max_linear_acceleration>
             <!--topics, frames and odometry-->
             <topic>cmd_vel</topic>
-            <tf_topic>tf</tf_topic>
+            <!--<tf_topic>tf</tf_topic>--> <!-- Only uncomment if not using Nav2 and not using robot_localization package-->
             <odom_topic>odom</odom_topic>
             <frame_id>${robot_name}/odom</frame_id> <!--Best to use prefixes and to set the prefix on the RVIZ config too, see xacro_properties.xacro for where to change these -->
             <child_frame_id>${robot_name}/base_footprint</child_frame_id>  <!--Best to use prefixes and to set the prefix on the RVIZ config too, see xacro_properties.xacro for where to change these -->

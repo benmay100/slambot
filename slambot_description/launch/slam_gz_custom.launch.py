@@ -190,7 +190,31 @@ def generate_launch_description():
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
         name='slam_toolbox',
-        output='screen'
+        output='screen',
+        ros_arguments=['--ros-args', '--log-level', 'slam_toolbox:=debug']
+    )
+
+
+# ========================================================= #
+
+# ======================== LOCALIZATION ========================== #
+
+    #This is the proper way to take odom data and publish it to the /tf topic! 
+    
+    # Path to the EKF config file
+    ekf_config_path = PathJoinSubstitution([
+        robot_package,
+        'config',
+        'ekf.yaml'
+    ])
+
+    # Robot Localization EKF Node
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[ekf_config_path]
     )
 
 # ========================================================= #
@@ -203,6 +227,7 @@ def generate_launch_description():
         set_gz_sim_resource_path, # This must come before any nodes that rely on it
         set_gazebo_model_path, # This must come before any nodes that rely on it
         robot_state_publisher_node,
+        robot_localization_node,
         gazebo_launch,
         spawn_entity_node,
         ros_gz_bridge,
