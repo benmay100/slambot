@@ -1,4 +1,5 @@
-#How to build the bridges!
+#How to build the ROS/Gazebo bridges!
+
 #1. Run your model in Gazebo, then run 'ros2 topic list' in the terminal
 #2. You will now see the ROS topics your Gazebo model might want to publish to (e.g. joint_states) or subscribe to (e.g. cmd_vel)
 #3. For each ROS topic you need to create a bridge for, now find its interface type using 'ros2 topic info /topic'
@@ -19,7 +20,7 @@
   direction: GZ_TO_ROS
 
 - ros_topic_name: "/joint_states"  #gz topic published by JointState plugin
-  gz_topic_name: "/world/empty/model/slambot/joint_state"
+  gz_topic_name: "/joint_states"
   ros_type_name: "sensor_msgs/msg/JointState"
   gz_type_name: "gz.msgs.Model"
   direction: GZ_TO_ROS
@@ -30,19 +31,19 @@
 #Use if a mobile base you want to control
 
 - ros_topic_name: "/cmd_vel" #gz topic published by DiffDrive plugin
-  gz_topic_name: "/model/slambot/cmd_vel"
+  gz_topic_name: "/cmd_vel"
   ros_type_name: "geometry_msgs/msg/Twist"
   gz_type_name: "gz.msgs.Twist"
   direction: ROS_TO_GZ
 
 - ros_topic_name: "/tf"  #gz topic published by DiffDrive plugin
-  gz_topic_name: "/model/slambot/tf"
+  gz_topic_name: "/tf"
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS
 
 - ros_topic_name: "/odom" #gz topic published by DiffDrive plugin
-  gz_topic_name: "/model/slambot/odometry"
+  gz_topic_name: "/odom"
   ros_type_name: "nav_msgs/msg/Odometry"
   gz_type_name: "gz.msgs.Odometry"
   direction: GZ_TO_ROS

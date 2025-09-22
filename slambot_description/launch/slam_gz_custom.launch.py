@@ -13,23 +13,35 @@ def generate_launch_description():
 # ================== ENVIRONMENT SETUP =================== #
 
 
-    #CHANGE THESE TO BE RELEVANT TO THE SPECIFIC PACKAGE
-    robot_description_path = get_package_share_directory('slambot_description')  # -----> Change me!
-    robot_package = FindPackageShare('slambot_description') # -----> Change me!
-    robot_name = 'slambot' # Verify this matches your robot's actual spawned name/tf_prefix
+    # CHANGE THESE TO BE RELEVANT TO THE SPECIFIC PACKAGE
+    robot_description_path = get_package_share_directory('slambot_description')
+    robot_package = FindPackageShare('slambot_description')
+    robot_name = 'slambot' 
     robot_urdf_file_name = 'slambot.urdf.xacro'
-    rviz_config_file_name = 'gazebo_and_rviz_config.rviz'
-    custom_world_file_name = 'custom_world_1.sdf'
+    rviz_config_file_name = 'slam_gz_rviz_config.rviz'
+    custom_world_file_name = 'maze_world_1.sdf'
+    gazebo_bridge_config_file_name = 'gazebo_bridge.yaml'
+    slam_config_file_name = 'slam_config.yaml'
 
     parent_of_share_path = os.path.dirname(robot_description_path)
 
-    # --- Set GZ_SIM_RESOURCE_PATH / GAZEBO_MODEL_PATH ---
+    # --- Set GZ_SIM_RESOURCE_PATH  ---
     set_gz_sim_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH', 
         value=[
             os.environ.get('GZ_SIM_RESOURCE_PATH', ''),
-            os.path.pathsep, # Separator for paths
-            parent_of_share_path # Add the path containing your package's share directory
+            os.path.pathsep,
+            parent_of_share_path
+        ]
+    )
+
+    # --- Set GAZEBO_MODEL_PATH ---
+    set_gazebo_model_path = SetEnvironmentVariable(
+        name='GAZEBO_MODEL_PATH',
+        value=[
+            os.environ.get('GAZEBO_MODEL_PATH', ''),
+            os.path.pathsep,
+            os.path.join(robot_description_path, 'models') # Path to your package's models directory
         ]
     )
 
@@ -41,8 +53,6 @@ def generate_launch_description():
     )
 
     use_sim_time = LaunchConfiguration('use_sim_time')
-
-
 
 
 # ========================================================= #
@@ -119,7 +129,7 @@ def generate_launch_description():
     ])
 
     # Construct the gz_args to the custom world as a single string
-    gz_args_value = ['-r ', custom_world_path] #the '-r' makes the server run
+    gz_args_value = ['-r ', custom_world_path]
 
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([gz_sim_launch_file]),
@@ -135,8 +145,8 @@ def generate_launch_description():
         executable='create',
         arguments=[
             '-name', robot_name, 
-            '-topic', 'robot_description', # Read URDF from /robot_description topic
-            '-x', '0', # Default spawn location
+            '-topic', 'robot_description',
+            '-x', '0',
             '-y', '0',
             '-z', '0.5'
         ],
@@ -148,42 +158,54 @@ def generate_launch_description():
 
 # ================= GAZEBO BRIDGES & SENSOR SETUP =================== #
 
-    bridge_config_file = os.path.join(robot_description_path, 'config', 'gazebo_bridge.yaml')
+    # Path to the gazebo bridge config file
+    bridge_config_path = PathJoinSubstitution([
+        robot_package,
+        'config',
+        gazebo_bridge_config_file_name
+    ])
 
     ros_gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         name='ros_gz_bridge',
-        parameters=[
-            {'config_file': bridge_config_file}
-        ],
+        parameters=[{'config_file': bridge_config_path}],
         output='screen'
     )
 
+# ========================================================= #
 
-    # New Node: Static Transform Publisher for map to odom
-    # This places your robot's 'odom' frame at the origin of the 'map' frame.
-    #Can remove this if using Nav2 / Slamtoolbox
-    map_odom_publisher_node = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='map_odom_broadcaster',
-        output='screen',
-        arguments=['0', '0', '0', '0', '0', '0', '1', 'map', f'{robot_name}/odom']
+# ======================== SLAM ========================== #
+
+    # Path to the SLAM config file
+    slam_config_path = PathJoinSubstitution([
+        robot_package,
+        'config', # Corrected path
+        slam_config_file_name
+    ])
+
+    # SLAM Toolbox Node
+    slam_toolbox_node = Node(
+        parameters=[slam_config_path],
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen'
     )
 
-
 # ========================================================= #
+
 
     return LaunchDescription([
         urdf_path_arg,
         rviz_config_path_arg,
         use_sim_time_declare,
         set_gz_sim_resource_path, # This must come before any nodes that rely on it
-        map_odom_publisher_node,
+        set_gazebo_model_path, # This must come before any nodes that rely on it
         robot_state_publisher_node,
         gazebo_launch,
         spawn_entity_node,
         ros_gz_bridge,
-        rviz2_node
+        rviz2_node,
+        slam_toolbox_node 
         ])

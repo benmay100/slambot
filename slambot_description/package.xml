@@ -20,9 +20,12 @@
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>
   <exec_depend>rviz2</exec_depend>
-
+  <build_depend>slam_toolbox</build_depend>
+  <exec_depend>slam_toolbox</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <gazebo_ros gazebo_media_path="${prefix}/models"/>
   </export>
 </package>

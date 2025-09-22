@@ -19,7 +19,7 @@ def generate_launch_description():
     robot_package = FindPackageShare('slambot_description') # -----> Change me!
     robot_name = 'slambot' # Verify this matches your robot's actual spawned name/tf_prefix
     robot_urdf_file_name = 'slambot.urdf.xacro'
-    rviz_config_file_name = 'slambot_config.rviz'
+    rviz_config_file_name = 'rviz_only_config.rviz'
 
     parent_of_share_path = os.path.dirname(robot_description_path)
 
@@ -63,7 +63,7 @@ def generate_launch_description():
         'rviz_config_path',
         default_value=PathJoinSubstitution([
             robot_package,
-            'rviz',
+            'config',
             rviz_config_file_name
         ]),
         description='Path to the RViz configuration file.'
@@ -81,8 +81,7 @@ def generate_launch_description():
         executable='robot_state_publisher',
         parameters=[{
             'robot_description': robot_description_content,
-            'use_sim_time': use_sim_time,
-            'frame_prefix': robot_name + '/' 
+            'use_sim_time': use_sim_time
         }]
     )
 

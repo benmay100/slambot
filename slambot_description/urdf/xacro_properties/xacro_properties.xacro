@@ -5,4 +5,5 @@
   <xacro:property name="package_name" value="slambot_description" />
   <xacro:property name="robot_name" value="slambot" />
 
+
 </robot>
