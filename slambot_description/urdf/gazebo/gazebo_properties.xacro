@@ -3,17 +3,23 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- Gazebo properties for the base link -->
-  <gazebo reference="${robot_name}/chassis_link">
+  <gazebo reference="base_link">
     <mu1 value="0.5"/> <!-- Friction coefficient in the first direction -->
     <mu2 value="0.5"/> <!-- Friction coefficient in the second direction -->
   </gazebo>
 
-  <gazebo reference="${robot_name}/lidar_link">
+  <gazebo reference="lidar_link">
     <mu1 value="0.5"/> <!-- Friction coefficient in the first direction -->
     <mu2 value="0.5"/> <!-- Friction coefficient in the second direction -->
   </gazebo>
 
-  <gazebo reference="${robot_name}/camera_mount_link">
+  <!-- Only needed if IMU link is a physical part, if not then comment out-->
+  <!--<gazebo reference="imu_link">
+    <mu1 value="0.5"/> 
+    <mu2 value="0.5"/> 
+  </gazebo>-->
+
+  <gazebo reference="camera_mount_link">
     <mu1 value="0.5"/> <!-- Friction coefficient in the first direction -->
     <mu2 value="0.5"/> <!-- Friction coefficient in the second direction -->
   </gazebo>
@@ -21,7 +27,7 @@
 
   <!-- Gazebo properties for wheel/axle links -->
   <!-- Right Wheel -->
-  <gazebo reference="${robot_name}/right_wheel_link">
+  <gazebo reference="right_wheel_link">
     <mu1 value="1.0"/> <!-- High Friction coefficient for wheels -->
     <mu2 value="1.0"/> <!-- High Friction coefficient for wheels -->
     <kp value="1000000.0"/> <!-- Spring stiffness for contact (optional, but good defaults) -->
@@ -29,7 +35,7 @@
   </gazebo>
 
   <!-- Left Wheel -->
-  <gazebo reference="${robot_name}/left_wheel_link">
+  <gazebo reference="left_wheel_link">
     <mu1 value="1.0"/> <!-- High Friction coefficient for wheels -->
     <mu2 value="1.0"/> <!-- High Friction coefficient for wheels -->
     <kp value="1000000.0"/> <!-- Spring stiffness for contact (optional, but good defaults) -->
@@ -37,7 +43,7 @@
   </gazebo>
 
   <!-- Caster Wheel -->
-  <gazebo reference="${robot_name}/caster_wheel_link">
+  <gazebo reference="caster_wheel_link">
     <mu1 value="0.8"/> <!-- High Friction coefficient for wheels -->
     <mu2 value="0.8"/> <!-- High Friction coefficient for wheels -->
     <kp value="1000000.0"/> <!-- Spring stiffness for contact (optional, but good defaults) -->
@@ -45,7 +51,7 @@
   </gazebo>
 
   <!-- Caster Frame -->
-  <gazebo reference="${robot_name}/caster_frame_link">
+  <gazebo reference="caster_frame_link">
     <mu1 value="0.1"/> <!-- Low Friction coefficient for frame -->
     <mu2 value="0.1"/> <!-- Low Friction coefficient for frame -->
   </gazebo>

@@ -6,17 +6,17 @@
 
 <!-- THIS WAS ADDED IN MANUALLY -->
 <!-- Link base footprint -->
-<link name="${robot_name}/base_footprint"/>
+<link name="base_footprint"/>
 <!-- Joint base footprint -->
-<joint name="${robot_name}/base_joint" type="fixed">
-    <parent link="${robot_name}/base_footprint" />
-    <child link="${robot_name}/chassis_link" />
+<joint name="base_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="base_link" />
     <origin xyz="0 0 0.045" rpy="0 0 0" />
 </joint>
 
 
 <!-- Link chassis -->
-  <link name="${robot_name}/chassis_link">
+  <link name="base_link">
     <inertial>
       <origin xyz="-0.00515019 1.96522e-17 0.0424366" rpy="0 0 0"/>
       <mass value="0.875175"/>
@@ -40,7 +40,7 @@
     </collision>
   </link>
   <!-- Link caster_frame -->
-  <link name="${robot_name}/caster_frame_link">
+  <link name="caster_frame_link">
     <inertial>
       <origin xyz="-0.0029329 -8.67362e-19 0.0118246" rpy="0 0 0"/>
       <mass value="0.016201"/>
@@ -64,7 +64,7 @@
     </collision>
   </link>
   <!-- Link caster_wheel -->
-  <link name="${robot_name}/caster_wheel_link">
+  <link name="caster_wheel_link">
     <inertial>
       <origin xyz="0 -1.22647e-18 0.0085" rpy="0 0 0"/>
       <mass value="0.00708604"/>
@@ -88,23 +88,23 @@
     </collision>
   </link>
   <!-- Joint from caster_frame to caster_wheel -->
-  <joint name="${robot_name}/caster_wheel_joint" type="continuous">
+  <joint name="caster_wheel_joint" type="continuous">
     <origin xyz="-0.0110526 0.0085 0.024" rpy="1.5708 -0 0"/>
-    <parent link="${robot_name}/caster_frame_link"/>
-    <child link="${robot_name}/caster_wheel_link"/>
+    <parent link="caster_frame_link"/>
+    <child link="caster_wheel_link"/>
     <axis xyz="0 0 1"/>
     <limit effort="100" velocity="100"/>
   </joint>
   <!-- Joint from chassis to caster_frame -->
-  <joint name="${robot_name}/caster_frame_joint" type="continuous">
+  <joint name="caster_frame_joint" type="continuous">
     <origin xyz="0.07 -1.04083e-17 -0.006" rpy="3.14159 -0 0"/>
-    <parent link="${robot_name}/chassis_link"/>
-    <child link="${robot_name}/caster_frame_link"/>
+    <parent link="base_link"/>
+    <child link="caster_frame_link"/>
     <axis xyz="0 0 1"/>
     <limit effort="100" velocity="100"/>
   </joint>
   <!-- Link right_wheel -->
-  <link name="${robot_name}/right_wheel_link">
+  <link name="right_wheel_link">
     <inertial>
       <origin xyz="-2.40006e-17 1.14016e-17 0.0247872" rpy="0 0 0"/>
       <mass value="0.0742142"/>
@@ -128,15 +128,15 @@
     </collision>
   </link>
   <!-- Joint from chassis to right_wheel -->
-  <joint name="${robot_name}/right_wheel_joint" type="continuous">
+  <joint name="right_wheel_joint" type="continuous">
     <origin xyz="-0.0561509 -0.0415 -0.01" rpy="1.5708 -0 0"/>
-    <parent link="${robot_name}/chassis_link"/>
-    <child link="${robot_name}/right_wheel_link"/>
+    <parent link="base_link"/>
+    <child link="right_wheel_link"/>
     <axis xyz="0 0 -1"/>
     <limit effort="100" velocity="100"/>
   </joint>
   <!-- Link left_wheel -->
-  <link name="${robot_name}/left_wheel_link">
+  <link name="left_wheel_link">
     <inertial>
       <origin xyz="-2.40006e-17 1.14016e-17 0.0247872" rpy="0 0 0"/>
       <mass value="0.0742142"/>
@@ -160,10 +160,10 @@
     </collision>
   </link>
   <!-- Joint from chassis to left_wheel -->
-  <joint name="${robot_name}/left_wheel_joint" type="continuous">
+  <joint name="left_wheel_joint" type="continuous">
     <origin xyz="-0.0561509 0.0415 -0.01" rpy="-1.5708 -0 0"/>
-    <parent link="${robot_name}/chassis_link"/>
-    <child link="${robot_name}/left_wheel_link"/>
+    <parent link="base_link"/>
+    <child link="left_wheel_link"/>
     <axis xyz="0 0 1"/>
     <limit effort="100" velocity="100"/>
   </joint>

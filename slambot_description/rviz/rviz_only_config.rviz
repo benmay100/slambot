@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /RobotModel1
         - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 542
   - Class: rviz_common/Selection
@@ -59,7 +60,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_description
+        Value: /slambot/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -67,45 +68,45 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        slambot/base_footprint:
+        base_footprint:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        slambot/camera_mount_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        slambot/camera_optical_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        slambot/caster_frame_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        slambot/caster_wheel_link:
+        camera_mount_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        slambot/chassis_link:
+        camera_optical_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        caster_frame_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        slambot/left_wheel_link:
+        caster_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        slambot/lidar_link:
+        left_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        slambot/right_wheel_link:
+        lidar_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_wheel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -125,27 +126,23 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        map:
+        base_footprint:
           Value: true
-        slambot/base_footprint:
+        base_link:
           Value: true
-        slambot/camera_mount_link:
+        camera_mount_link:
           Value: true
-        slambot/camera_optical_link:
+        camera_optical_link:
           Value: true
-        slambot/caster_frame_link:
+        caster_frame_link:
           Value: true
-        slambot/caster_wheel_link:
+        caster_wheel_link:
           Value: true
-        slambot/chassis_link:
+        left_wheel_link:
           Value: true
-        slambot/left_wheel_link:
+        lidar_link:
           Value: true
-        slambot/lidar_link:
-          Value: true
-        slambot/odom:
-          Value: true
-        slambot/right_wheel_link:
+        right_wheel_link:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -153,26 +150,26 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        slambot/base_footprint:
-          slambot/chassis_link:
-            slambot/camera_mount_link:
-              slambot/camera_optical_link:
+        base_footprint:
+          base_link:
+            camera_mount_link:
+              camera_optical_link:
                 {}
-            slambot/caster_frame_link:
-              slambot/caster_wheel_link:
+            caster_frame_link:
+              caster_wheel_link:
                 {}
-            slambot/left_wheel_link:
+            left_wheel_link:
               {}
-            slambot/lidar_link:
+            lidar_link:
               {}
-            slambot/right_wheel_link:
+            right_wheel_link:
               {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: slambot/base_footprint
+    Fixed Frame: base_footprint
     Frame Rate: 30
   Name: root
   Tools:
@@ -215,25 +212,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.3143831491470337
+      Distance: 1.0757420063018799
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.03517618775367737
-        Y: 0.06618542224168777
-        Z: 0.2695571184158325
+        X: 0.08426050841808319
+        Y: -0.08908173441886902
+        Z: 0.08774077892303467
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.390398234128952
+      Pitch: 0.7303979396820068
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.413580417633057
+      Yaw: 5.018575668334961
     Saved: ~
 Window Geometry:
   Displays:
@@ -251,5 +248,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 3415
-  Y: 318
+  X: 5403
+  Y: 259

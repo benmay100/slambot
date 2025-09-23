@@ -9,8 +9,8 @@
     <gazebo>
         <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
             <!--wheels-->
-            <left_joint>${robot_name}/left_wheel_joint</left_joint>
-            <right_joint>${robot_name}/right_wheel_joint</right_joint>
+            <left_joint>left_wheel_joint</left_joint>
+            <right_joint>right_wheel_joint</right_joint>
             <!--kinematics-->
             <wheel_separation>0.133</wheel_separation>
             <wheel_radius>0.035</wheel_radius>
@@ -20,8 +20,8 @@
             <topic>cmd_vel</topic>
             <!--<tf_topic>tf</tf_topic>--> <!-- Only uncomment if not using Nav2 and not using robot_localization package-->
             <odom_topic>odom</odom_topic>
-            <frame_id>${robot_name}/odom</frame_id> <!--Best to use prefixes and to set the prefix on the RVIZ config too, see xacro_properties.xacro for where to change these -->
-            <child_frame_id>${robot_name}/base_footprint</child_frame_id>  <!--Best to use prefixes and to set the prefix on the RVIZ config too, see xacro_properties.xacro for where to change these -->
+            <frame_id>odom</frame_id> <!--Best to use prefixes and to set the prefix on the RVIZ config too, see xacro_properties.xacro for where to change these -->
+            <child_frame_id>base_footprint</child_frame_id>  <!--Best to use prefixes and to set the prefix on the RVIZ config too, see xacro_properties.xacro for where to change these -->
             <odom_publisher_frequency>30</odom_publisher_frequency>
         </plugin>
     </gazebo>
@@ -29,10 +29,10 @@
     <gazebo>
         <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
             <topic>joint_states</topic>
-            <joint_name>${robot_name}/left_wheel_joint</joint_name>
-            <joint_name>${robot_name}/right_wheel_joint</joint_name>
-            <joint_name>${robot_name}/caster_frame_joint</joint_name> <!--Needed, even though not 'driven' joints-->
-            <joint_name>${robot_name}/caster_wheel_joint</joint_name> <!--Needed, even though not 'driven' joints-->
+            <joint_name>left_wheel_joint</joint_name>
+            <joint_name>right_wheel_joint</joint_name>
+            <joint_name>caster_frame_joint</joint_name> <!--Needed, even though not 'driven' joints-->
+            <joint_name>caster_wheel_joint</joint_name> <!--Needed, even though not 'driven' joints-->
         </plugin>
     </gazebo>
 
@@ -44,19 +44,25 @@
         <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
             <render_engine>ogre2</render_engine>
         </plugin>
+        
+        <!--For IMU-->
+        <plugin filename="gz-sim-imu-system"
+            name="gz::sim::systems::Imu">
+        </plugin>
+
     </gazebo>
 
 
 
 <!-- =========== Lidar Sensor ============ -->
-    <gazebo reference="${robot_name}/lidar_link">
-        <sensor name='${robot_name}_lidar' type='gpu_lidar'>
-            <pose relative_to='${robot_name}/lidar_link'>0 0 0 0 0 0</pose>
+    <gazebo reference="lidar_link">
+        <sensor name='lidar' type='gpu_lidar'>
+            <pose relative_to='lidar_link'>0 0 0 0 0 0</pose>
             <topic>scan</topic>
             <update_rate>2</update_rate>
             <always_on>1</always_on>
             <visualize>1</visualize>
-            <gz_frame_id>${robot_name}/lidar_link</gz_frame_id> <!-- This will give a warning on terminal, but that's a gazebo harmonic issue, so ignore it-->
+            <gz_frame_id>lidar_link</gz_frame_id> <!-- This will give a warning on terminal, but that's a gazebo harmonic issue, so ignore it-->
             <lidar>
                 <scan>
                     <horizontal>
@@ -84,7 +90,7 @@
 
 
 <!-- =========== Camera Sensor ============ -->
-    <gazebo reference="${robot_name}/camera_mount_link">
+    <gazebo reference="camera_mount_link">
         <sensor name="camera" type="camera">
             <camera>
                 <horizontal_fov>1.3962634</horizontal_fov>
@@ -102,7 +108,7 @@
                     <mean>0.0</mean>
                     <stddev>0.007</stddev>
                 </noise>
-                <optical_frame_id>${robot_name}/camera_optical_link</optical_frame_id>
+                <optical_frame_id>camera_optical_link</optical_frame_id>
                 <camera_info_topic>camera/camera_info</camera_info_topic>
             </camera>
             <always_on>1</always_on>
@@ -112,5 +118,36 @@
         </sensor>
     </gazebo>
 <!--=========================================-->
+
+
+<!-- =========== IMU Sensor ============ -->
+
+    <gazebo reference="imu_link">
+        <sensor name="imu_sensor" type="imu">
+            <topic>/imu/data</topic>
+            <update_rate>15.0</update_rate>
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <gz_frame_id>imu_link</gz_frame_id>
+            <noise>
+            <type>gaussian</type>
+            <rate>
+                <mean>0.0</mean>
+                <stddev>0.0002</stddev>
+                <bias_mean>0.00000075</bias_mean>
+                <bias_stddev>0.00000008</bias_stddev>
+            </rate>
+            <accel>
+                <mean>0.0</mean>
+                <stddev>0.017</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.001</bias_stddev>
+            </accel>
+            </noise>
+        </sensor>
+    </gazebo>
+
+
+<!--==========================================-->
 
 </robot>

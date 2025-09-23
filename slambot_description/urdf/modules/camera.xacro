@@ -5,7 +5,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- Link camera -->
-  <link name="${robot_name}/camera_mount_link">
+  <link name="camera_mount_link">
     <inertial>
       <origin xyz="0 -5.78241e-19 -0.005" rpy="0 0 0"/>
       <mass value="0.004208"/>
@@ -29,11 +29,11 @@
     </collision>
   </link>
   <!-- Joint from chassis to camera -->
-  <joint name="${robot_name}/camera_mount_joint" type="fixed">
+  <joint name="camera_mount_joint" type="fixed">
     <!--<origin xyz="0.0875 0 0.0335" rpy="-3.14159 1.5708 0"/>-->
     <origin xyz="0.0875 0 0.0335" rpy="0 0 0"/>
-    <parent link="${robot_name}/chassis_link"/>
-    <child link="${robot_name}/camera_mount_link"/>
+    <parent link="base_link"/>
+    <child link="camera_mount_link"/>
     <axis xyz="0 0 1"/>
     <limit effort="100" velocity="100"/>
   </joint>
@@ -42,16 +42,16 @@
   generate an optical frame 
   http://www.ros.org/reps/rep-0103.html#suffix-frames
   so that ros and opencv can operate on the camera frame correctly -->
-  <link name="${robot_name}/camera_optical_link">
+  <link name="camera_optical_link">
   </link>
 
-  <joint name="${robot_name}/camera_optical_joint" type="fixed">
+  <joint name="camera_optical_joint" type="fixed">
       <!-- these values have to be these values otherwise the gazebo camera
           image won't be aligned properly with the frame it is supposedly
           originating from -->
       <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
-      <parent link="${robot_name}/camera_mount_link"/>
-      <child link="${robot_name}/camera_optical_link"/>
+      <parent link="camera_mount_link"/>
+      <child link="camera_optical_link"/>
   </joint>
 
 
