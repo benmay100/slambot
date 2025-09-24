@@ -1,1 +1,1 @@
-A ROS2 robot package with a slam-enabled diff-drive robot which launches into Gazebo and RVIZ and has a lidar and camera, and can be teleoperated.
+A ROS2 robot package with a slam-enabled diff-drive robot which launches into Gazebo and RVIZ and has a lidar and camera, and can be teleoperated. This package uses a four-wheeled diff-drive robot with a low centre of gravity so it's nice and stable. 
