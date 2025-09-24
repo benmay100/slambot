@@ -33,7 +33,7 @@ def generate_launch_description():
     # --- Declare Launch Arguments ---
     declare_world_cmd = DeclareLaunchArgument(
         'world',
-        default_value='maze_world_1.sdf',
+        default_value='indoor_world_1.sdf',
         description='The world file to launch in Gazebo'
     )
 
@@ -50,6 +50,13 @@ def generate_launch_description():
         description='Full path to the ROS2 parameters file for SLAM'
     )
 
+    # Path to the RViz configuration file
+    declare_rviz_config_file_cmd = DeclareLaunchArgument(
+        'rviz_config_file',
+        default_value=os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_rviz_and_slam_config.rviz'),
+        description='Full path to the RViz configuration file to use')
+
+
     # --- Include Gazebo Launch File ---
     # This includes the simulation environment (Gazebo, Localization, RViz)
     start_simulation_cmd = IncludeLaunchDescription(
@@ -59,8 +66,7 @@ def generate_launch_description():
         launch_arguments={
             'world': LaunchConfiguration('world'),
             'robot_name': LaunchConfiguration('robot_name'),
-            # Override the RViz config file to use the one designed for SLAM
-            'rviz_config': os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_rviz_and_slam_config.rviz')
+            'rviz_config_file': LaunchConfiguration('rviz_config_file'), # Pass the config file down
         }.items()
     )
 
@@ -74,20 +80,20 @@ def generate_launch_description():
         output='screen',
         parameters=[
           LaunchConfiguration('slam_params_file'),
-          {'use_sim_time': True} # <-- CRITICAL FIX: Changed from string 'true' to boolean True
+          {'use_sim_time': True} # <-- CRITICAL
         ],
         remappings=[
             ('scan', [LaunchConfiguration('robot_name'), '/scan']),
-            ('map', [LaunchConfiguration('robot_name'), '/map'])
+            ('map', [LaunchConfiguration('robot_name'), '/map']) 
         ]
     )
 
     # --- Lifecycle Management for SLAM Node ---
     # This sequence automates the manual "ros2 lifecycle set" commands.
 
-    # 1. After a 10-second delay, issue the "configure" transition
+    # 1. After a 3-second delay, issue the "configure" transition
     configure_slam_node = TimerAction(
-        period=5.0,
+        period=3.0,
         actions=[
             EmitEvent(
                 event=ChangeState(
@@ -99,7 +105,7 @@ def generate_launch_description():
     )
 
     # 2. Once the node transitions to "inactive" (after configuring),
-    #    wait another 10 seconds and issue the "activate" transition.
+    #    wait another 3 seconds and issue the "activate" transition.
     activate_slam_node = RegisterEventHandler(
         OnStateTransition(
             target_lifecycle_node=start_slam_toolbox_node,
@@ -107,7 +113,7 @@ def generate_launch_description():
             goal_state="inactive",
             entities=[
                 TimerAction(
-                    period=5.0,
+                    period=3.0,
                     actions=[
                         EmitEvent(
                             event=ChangeState(
@@ -128,7 +134,8 @@ def generate_launch_description():
     ld.add_action(declare_world_cmd)
     ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_slam_params_file_cmd)
-
+    ld.add_action(declare_rviz_config_file_cmd)
+    
     # Add the actions to launch and manage the nodes
     ld.add_action(start_simulation_cmd)
     ld.add_action(start_slam_toolbox_node)

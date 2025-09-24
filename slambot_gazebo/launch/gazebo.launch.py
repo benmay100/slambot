@@ -3,62 +3,59 @@
 Launch a Gazebo simulation for the Slambot.
 
 This launch file orchestrates the entire simulation, including:
-1. Starting the Gazebo server and GUI using the standard ros_gz_sim launch file.
+1. Starting Gazebo with a specified world.
 2. Launching the ROS-Gazebo bridge for communication.
 3. Spawning the robot model into the simulation.
-4. Including the separate RViz launch file for visualization.
+4. Including separate launch files for RViz, robot description, and localization.
 """
 import os
 
-from ament_index_python.packages import get_package_prefix, get_package_share_directory
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
-from launch_ros.actions import Node
-
-# Pre-define the package share directory path for use in default arguments
-pkg_slambot_gazebo = get_package_share_directory('slambot_gazebo')
-
-ARGUMENTS = [
-    # --- Basic Arguments ---
-    DeclareLaunchArgument('world', default_value='maze_world_1.sdf', 
-                          #change world name here for custom worlds 
-                          # OR change them in the terminal at launch (e.g. ros2 launch slambot_gazebo gazebo.launch.py world:=maze_world_1.sdf)
-                          description='The world file to launch in Gazebo'),
-    DeclareLaunchArgument('robot_name', default_value='slambot',
-                          description='The name/namespace for the robot'),
-    DeclareLaunchArgument('use_rviz', default_value='true',
-                          description='Whether to start RViz'),
-    DeclareLaunchArgument('headless', default_value='False',
-                          description='Whether to run Gazebo without a GUI'),
-
-    # --- File Name Arguments (for modularity) ---
-    DeclareLaunchArgument('bridge_config', default_value='ros_gz_bridge.yaml',
-                          description='ROS-Gazebo bridge config file'),
-    # This new argument specifies the RViz config file for the Gazebo simulation
-    DeclareLaunchArgument('rviz_config',
-                          default_value=os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config.rviz'),
-                          description='Full path to the RViz config file to use'),
-
-    # --- Spawning Arguments ---
-    DeclareLaunchArgument('spawn_x', default_value='0.0',
-                          description='X coordinate for robot spawn position'),
-    DeclareLaunchArgument('spawn_y', default_value='0.0',
-                          description='Y coordinate for robot spawn position'),
-    DeclareLaunchArgument('spawn_z', default_value='0.2',
-                          description='Z coordinate for robot spawn position'),
-]
 
 def generate_launch_description():
 
-    # --- DIRECTORY SETUP ---
-    # We already got pkg_slambot_gazebo outside the function for the arguments
+    # ================== Get Package Directories =================== #
+    
     pkg_slambot_description = get_package_share_directory('slambot_description')
+    pkg_slambot_gazebo = get_package_share_directory('slambot_gazebo')
     pkg_slambot_localization = get_package_share_directory('slambot_localization')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
+
+    # ================== Declare Launch Arguments =================== #
+
+    # World to launch in Gazebo
+    declare_world_cmd = DeclareLaunchArgument(
+        'world',
+        default_value='indoor_world_1.sdf',
+        description='The world file to launch in Gazebo')
+
+    # Robot's name and namespace
+    declare_robot_name_cmd = DeclareLaunchArgument(
+        'robot_name',
+        default_value='slambot',
+        description='The name/namespace for the robot')
+
+    # Whether to run Gazebo without a GUI
+    declare_headless_cmd = DeclareLaunchArgument(
+        'headless',
+        default_value='False',
+        description='Whether to run Gazebo without a GUI')
+
+    # Path to the RViz configuration file
+    declare_rviz_config_file_cmd = DeclareLaunchArgument(
+        'rviz_config_file',
+        default_value=os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config.rviz'),
+        description='Full path to the RViz configuration file to use')
+
+    # ================== Set Environment Variables =================== #
     
+    # This is critical to allow Gazebo to find the meshes from the slambot_description package
     parent_of_share_path = os.path.dirname(pkg_slambot_description)
 
     # --- Set GZ_SIM_RESOURCE_PATH  ---
@@ -71,12 +68,12 @@ def generate_launch_description():
             parent_of_share_path
         ]
     )
+    
+    # --- Set GAZEBO_MODEL_PATH --- this is handled from inside the package.xml file - see near the bottom of the file some important exports!
 
-    # --- Set GAZEBO_MODEL_PATH ---
-    # This is handled from inside the package.xml file - see near the bottom of the file some important exports!
 
-
-    # --- GAZEBO ---
+    # ================== Start Gazebo Simulation =================== #
+    
     world_path = PathJoinSubstitution([pkg_slambot_gazebo, 'worlds', LaunchConfiguration('world')])
 
     gz_sim_server = IncludeLaunchDescription(
@@ -94,15 +91,16 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(['not ', LaunchConfiguration('headless')]))
     )
 
-
-    # --- ROS-GAZEBO BRIDGE ---
-    bridge_config_path = PathJoinSubstitution([pkg_slambot_gazebo, 'config', LaunchConfiguration('bridge_config')])
-    start_ros_gz_bridge = Node(
+    # ================== Start ROS-Gazebo Bridge =================== #
+    
+    start_ros_gz_bridge_cmd = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        parameters=[{'config_file': bridge_config_path}],
-        # Remap all necessary topics from the bridge to be namespaced
-        # You may want to leave some not namespaced (e.g. /cmd_vel if its being used by a teleop node)
+        parameters=[{
+            'config_file': PathJoinSubstitution([
+                pkg_slambot_gazebo, 'config', 'ros_gz_bridge.yaml'
+            ])
+        }],
         remappings=[
             ('/scan', [LaunchConfiguration('robot_name'), '/scan']),
             ('/imu/data', [LaunchConfiguration('robot_name'), '/imu/data']),
@@ -110,60 +108,69 @@ def generate_launch_description():
             ('/camera/camera_info', [LaunchConfiguration('robot_name'), '/camera/camera_info']),
             ('/odom', [LaunchConfiguration('robot_name'), '/odom']),
             ('/joint_states', [LaunchConfiguration('robot_name'), '/joint_states']),
+            ('/cmd_vel', [LaunchConfiguration('robot_name'), '/cmd_vel']),
         ],
         output='screen'
     )
-
-    # --- RVIZ & NAMESPACED ROBOT STATE PUBLISHER ---
-    launch_rviz_and_description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([pkg_slambot_description, 'launch', 'rviz.launch.py'])
-        ),
-        launch_arguments={
-            'robot_name': LaunchConfiguration('robot_name'),
-            'use_rviz': LaunchConfiguration('use_rviz'),
-            'use_sim_time': 'true',
-            'rviz_config': LaunchConfiguration('rviz_config'), # Pass the selected config to the RViz launch file
-            'jsp_gui': 'false'  # <-- Disables joint state publisher in RVIZ when we're using gazebo
-        }.items()
-    )
-
     
-    # --- EKF LOCALIZATION NODE ---  <-- ADDED SECTION
-    launch_ekf_localization = IncludeLaunchDescription(
+    # ================== Start Robot Description & RViz =================== #
+    
+    start_rviz_and_description_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            PathJoinSubstitution([pkg_slambot_localization, 'launch', 'localization.launch.py'])
+            os.path.join(pkg_slambot_description, 'launch', 'rviz.launch.py')
         ),
         launch_arguments={
             'robot_name': LaunchConfiguration('robot_name'),
+            'use_sim_time': 'true',
+            'rviz_config_file': LaunchConfiguration('rviz_config_file'), # Pass the config file down
+            'jsp_gui': 'false'
         }.items()
     )
 
-    # --- ROBOT SPAWNING ---
-    spawn_robot_into_gazebo = Node(
+    # ================== Start Localization (EKF) =================== #
+    
+    start_ekf_localization_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_slambot_localization, 'launch', 'localization.launch.py')
+        ),
+        launch_arguments={
+            'robot_name': LaunchConfiguration('robot_name'),
+            'use_sim_time': 'true'
+        }.items()
+    )
+
+    # ================== Spawn Robot into Gazebo =================== #
+    
+    spawn_robot_cmd = Node(
         package='ros_gz_sim',
         executable='create',
         arguments=[
             '-name', LaunchConfiguration('robot_name'),
-            '-x', LaunchConfiguration('spawn_x'),
-            '-y', LaunchConfiguration('spawn_y'),
-            '-z', LaunchConfiguration('spawn_z'),
+            '-x', '0.0',
+            '-y', '0.0',
+            '-z', '0.2',
             '-topic', [LaunchConfiguration('robot_name'), '/robot_description']
         ],
         output='screen'
     )
 
-    # --- CREATE LAUNCH DESCRIPTION ---
-    ld = LaunchDescription(ARGUMENTS)
+    # ================== Create Launch Description =================== #
     
+    ld = LaunchDescription()
+
+    # Add launch arguments
+    ld.add_action(declare_world_cmd)
+    ld.add_action(declare_robot_name_cmd)
+    ld.add_action(declare_headless_cmd)
+    ld.add_action(declare_rviz_config_file_cmd)
+
     # Add actions
     ld.add_action(set_gz_sim_resource_path)
     ld.add_action(gz_sim_server)
     ld.add_action(gz_sim_gui)
-    ld.add_action(start_ros_gz_bridge)
-    ld.add_action(launch_rviz_and_description)
-    ld.add_action(launch_ekf_localization)
-    ld.add_action(spawn_robot_into_gazebo)
+    ld.add_action(start_ros_gz_bridge_cmd)
+    ld.add_action(start_rviz_and_description_cmd)
+    ld.add_action(start_ekf_localization_cmd)
+    ld.add_action(spawn_robot_cmd)
 
     return ld
-

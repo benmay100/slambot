@@ -50,7 +50,7 @@ def generate_launch_description():
           LaunchConfiguration('slam_params_file'),
           {'use_sim_time': LaunchConfiguration('use_sim_time')}
         ],
-        # Remap the generic 'scan' topic to the robot's namespaced topic
+        # Remap the generic 'scan' and 'map' topics to the robot's namespaced topic
         remappings=[
             ('scan', [LaunchConfiguration('robot_name'), '/scan']),
             ('map', [LaunchConfiguration('robot_name'), '/map'])

@@ -12,33 +12,34 @@ slam_toolbox:
     ceres_loss_function: "None"
 
     # ROS-RELATED PARAMETERS
-    odom_frame: "odom"
-    map_frame: "map"
-    base_frame: "base_link"
-    scan_topic: "scan" # This is now the generic topic that will be remapped in the launch file to 'robot_name/scan'
+    odom_frame: "odom" #We aren't using prefixed frames here but if you were (e.g. myrobot_odom) then need to account for that here
+    map_frame: "map" #We aren't using prefixed frames here but if you were (e.g. myrobot_map) then need to account for that here
+    base_frame: "base_footprint" #Make sure to use 'base_footprint' (not 'base_link') if you have a base_footprint to ensure a complete TF tree
+    scan_topic: "scan" #We ARE using namespaced topics (e.g. myrobot/scan) but don't worry the launch file will handle dynamic topic namespacing
+
     use_scan_matching: true
     use_scan_barycenter: true
-    minimum_travel_distance: 0.2
+    minimum_travel_distance: 0.1 # <-- DECREASED: Process scans more frequently to reduce drift between updates.
     minimum_travel_heading: 0.17
     scan_buffer_size: 10
     scan_buffer_maximum_scan_distance: 10.0
-    link_match_minimum_response_fine: 0.1
-    link_scan_maximum_distance: 1.5
-    loop_search_maximum_distance: 3.0
+    link_match_minimum_response_fine: 0.15
+    link_scan_maximum_distance: 1.0 # <-- DECREASED: Creates a denser pose graph for better tracking.
     do_loop_closing: true
+    loop_search_maximum_distance: 10.0
     loop_match_minimum_chain_size: 10
     loop_match_maximum_variance_coarse: 3.0
-    loop_match_minimum_response_coarse: 0.35
-    loop_match_minimum_response_fine: 0.45
+    loop_match_minimum_response_coarse: 0.55
+    loop_match_minimum_response_fine: 0.65
 
     # CORRELATION PARAMETERS
-    correlation_search_space_dimension: 0.5
+    correlation_search_space_dimension: 0.8
     correlation_search_space_resolution: 0.01
     correlation_search_space_smear_deviation: 0.1
 
     # SCAN MATCHER PARAMETERS
-    distance_variance_penalty: 0.5
-    angle_variance_penalty: 1.0
+    distance_variance_penalty: 0.2
+    angle_variance_penalty: 0.4 # <-- DECREASED: Trust odometry rotation less, rely more on scan matching.
     fine_search_angle_offset: 0.00349
     coarse_search_angle_offset: 0.349
     coarse_angle_resolution: 0.0349
@@ -47,7 +48,6 @@ slam_toolbox:
     use_response_expansion: true
 
     # GENERAL PARAMETERS
-    use_sim_time: true
     transform_publish_period: 0.02
     map_update_interval: 5.0
     resolution: 0.05
@@ -58,3 +58,12 @@ slam_toolbox:
     stack_size_to_use: 40000000
     enable_interactive_mode: true
 
+    # Ceres Scan Matcher options
+    ceres_scan_matcher:
+      use_nonmonotonic_steps: false
+      max_num_iterations: 20
+      ceres_solver_options:
+        use_explicit_schur_complement: true
+        max_num_iterations: 10
+        num_threads: 4
+        num_linear_solver_threads: 4
