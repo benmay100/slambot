@@ -1,0 +1,89 @@
+# ekf.yaml
+# The definitive configuration for the robot_localization EKF node.
+# Fuses wheel odometry and IMU data, and handles zero-covariance sensor messages.
+
+ekf_filter_node:
+  ros__parameters:
+    # GENERAL SETTINGS
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: true
+    publish_tf: true
+
+    # FRAME PARAMETERS (Corrected to be non-namespaced)
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom
+
+    # SENSOR INPUT 0: WHEEL ODOMETRY
+    odom0: /slambot/odom
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  true,  false,
+                   false, false, true,
+                   false, false, false]
+    odom0_differential: false
+    odom0_relative: false
+    
+    # --- OVERRIDE COVARIANCE FOR ODOM ---
+    # This is a failsafe in case the Gazebo odometry also has zero covariance.
+    odom0_pose_covariance: [0.001, 0.0,   0.0,   0.0,   0.0,   0.0,
+                            0.0,   0.001, 0.0,   0.0,   0.0,   0.0,
+                            0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,
+                            0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,
+                            0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,
+                            0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
+
+    odom0_twist_covariance: [0.001, 0.0,   0.0,   0.0,   0.0,   0.0,
+                             0.0,   0.001, 0.0,   0.0,   0.0,   0.0,
+                             0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,
+                             0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,
+                             0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,
+                             0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
+
+    # SENSOR INPUT 1: IMU DATA
+    imu0: /slambot/imu/data
+    imu0_config: [false, false, false,
+                  true,  true,  true,
+                  false, false, false,
+                  true,  true,  true,
+                  false, false, false]
+    imu0_differential: false
+    imu0_relative: false
+    imu0_remove_gravitational_acceleration: true
+
+    # --- CRITICAL: OVERRIDE COVARIANCE FOR IMU ---
+    # This forces the EKF to accept the IMU data by providing a non-zero covariance.
+    imu0_pose_covariance: [0.001, 0.0,   0.0,   0.0,   0.0,   0.0,
+                           0.0,   0.001, 0.0,   0.0,   0.0,   0.0,
+                           0.0,   0.0,   0.001, 0.0,   0.0,   0.0,
+                           0.0,   0.0,   0.0,   0.001, 0.0,   0.0,
+                           0.0,   0.0,   0.0,   0.0,   0.001, 0.0,
+                           0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
+
+    imu0_twist_covariance: [0.001, 0.0,   0.0,   0.0,   0.0,   0.0,
+                            0.0,   0.001, 0.0,   0.0,   0.0,   0.0,
+                            0.0,   0.0,   0.001, 0.0,   0.0,   0.0,
+                            0.0,   0.0,   0.0,   0.001, 0.0,   0.0,
+                            0.0,   0.0,   0.0,   0.0,   0.001, 0.0,
+                            0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
+                            
+    # --- PROCESS NOISE COVARIANCE ---
+    # These values represent the filter's uncertainty about its own motion model.
+    process_noise_covariance: [0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.05, 0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.03, 0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.06, 0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.25,  0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.25,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.04, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.02, 0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.015]
+
