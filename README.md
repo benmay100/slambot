@@ -18,7 +18,7 @@ ros2 launch slambot_bringup sim_with_slam.launch.py
 ## To Teleop
 
 ```python
-ros2 run teleop_twist_keyboard teleop_twist_keyboard 
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/slambot/cmd_vel
 ```
 
 
