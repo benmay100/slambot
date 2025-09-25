@@ -16,7 +16,7 @@ def generate_launch_description():
     map_file_path = PathJoinSubstitution([
         FindPackageShare('slambot_nav2'), # <-- Change to your package name
         'maps',
-        'my_maze_map_1.yaml' # <-- Change to your map file name
+        'my_maze_map_1.yaml' # <-- This is a default, if you want a different map, change it from launch file in slambot_bringup
     ])
 
     # 3. Define the path to YOUR custom nav2_params.yaml

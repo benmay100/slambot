@@ -19,8 +19,9 @@ def generate_launch_description():
     """Generate the launch description for the simulation without SLAM."""
 
     # Get package directories
-    pkg_slambot_gazebo = get_package_share_directory('slambot_gazebo')
+    #pkg_slambot_gazebo = get_package_share_directory('slambot_gazebo')
     pkg_slambot_nav2 = get_package_share_directory('slambot_nav2')
+    pkg_slambot_bringup = get_package_share_directory('slambot_bringup')
 
     # --- Declare Launch Arguments ---
     #These are arguments you can edit, and which are passed through into the gazebo.launch.py file, and
@@ -46,6 +47,12 @@ def generate_launch_description():
         'map',
         default_value=PathJoinSubstitution([pkg_slambot_nav2, 'maps', 'my_maze_map_1.yaml']),
         description='Full path to the map file to load for navigation')
+    
+    #Namespaces the /tf topics when using Nav2
+    declare_using_nav2_cmd = DeclareLaunchArgument(
+        'using_nav_2', 
+        default_value='true',
+        description='Namespaces the /tf topics if set to true')
 
     declare_rviz_config_cmd = DeclareLaunchArgument(
         'rviz_config_file',
@@ -57,16 +64,32 @@ def generate_launch_description():
 
 
     # --- Include Gazebo Launch File ---
+    # start_simulation_cmd = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         os.path.join(pkg_slambot_gazebo, 'launch', 'gazebo.launch.py')
+    #     ),
+    #     # Pass the launch arguments to the included launch file
+    #     launch_arguments={
+    #         'world': LaunchConfiguration('world'),
+    #         'robot_name': LaunchConfiguration('robot_name'),
+    #         'use_sim_time': LaunchConfiguration('use_sim_time'),
+    #         'rviz_config_file': LaunchConfiguration('rviz_config_file'),
+    #         'using_nav_2': LaunchConfiguration('using_nav_2') # ENSURES /slambot/tf!!!
+    #     }.items()
+    # )
+
+        # --- Include Gazebo Launch File ---
     start_simulation_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_slambot_gazebo, 'launch', 'gazebo.launch.py')
+            os.path.join(pkg_slambot_bringup, 'launch', 'sim_no_slam.launch.py')
         ),
         # Pass the launch arguments to the included launch file
         launch_arguments={
             'world': LaunchConfiguration('world'),
             'robot_name': LaunchConfiguration('robot_name'),
+            'rviz_config_file': LaunchConfiguration('rviz_config_file'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
-            'rviz_config_file': LaunchConfiguration('rviz_config_file')
+            'using_nav_2': LaunchConfiguration('using_nav_2') # ENSURES /slambot/tf!!!
         }.items()
     )
 
@@ -75,12 +98,11 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_slambot_nav2, 'launch', 'nav2.launch.py')
         ),
-        # MODIFIED: Pass necessary arguments to the Nav2 launch file
         launch_arguments={
             'namespace': LaunchConfiguration('robot_name'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
             'map': LaunchConfiguration('map'),
-        }.items()
+        }.items(),
     )
 
     # --- Create Launch Description ---
@@ -91,6 +113,7 @@ def generate_launch_description():
     ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_map_cmd)  
+    ld.add_action(declare_using_nav2_cmd)
     ld.add_action(declare_rviz_config_cmd)          
     ld.add_action(start_simulation_cmd)
     ld.add_action(start_nav2_cmd)

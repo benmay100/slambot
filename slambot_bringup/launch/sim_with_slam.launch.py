@@ -43,6 +43,12 @@ def generate_launch_description():
         description='The name/namespace for the robot'
     )
 
+    #Namespaces the /tf topics when using Nav2
+    declare_using_nav2_cmd = DeclareLaunchArgument(
+        'using_nav_2', 
+        default_value='false',
+        description='Namespaces the /tf topics if set to true')
+
     # This argument allows us to specify the SLAM params file from the command line
     declare_slam_params_file_cmd = DeclareLaunchArgument(
         'slam_params_file',
@@ -67,6 +73,7 @@ def generate_launch_description():
             'world': LaunchConfiguration('world'),
             'robot_name': LaunchConfiguration('robot_name'),
             'rviz_config_file': LaunchConfiguration('rviz_config_file'), # Pass the config file down
+            'using_nav_2': LaunchConfiguration('using_nav_2')
         }.items()
     )
 
@@ -133,6 +140,7 @@ def generate_launch_description():
     # Add the declared arguments
     ld.add_action(declare_world_cmd)
     ld.add_action(declare_robot_name_cmd)
+    ld.add_action(declare_using_nav2_cmd)
     ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
     

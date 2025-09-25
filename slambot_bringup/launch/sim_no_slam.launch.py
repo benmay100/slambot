@@ -35,6 +35,23 @@ def generate_launch_description():
         default_value='slambot',
         description='The name/namespace for the robot'
     )
+
+    #Namespaces the /tf topics when using Nav2
+    declare_using_nav2_cmd = DeclareLaunchArgument(
+        'using_nav_2', 
+        default_value='false',
+        description='Namespaces the /tf topics if set to true')
+    
+    declare_use_sim_time_cmd = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='true',
+        description='Use simulation (Gazebo) clock if true')
+    
+    # Path to the RViz configuration file
+    declare_rviz_config_file_cmd = DeclareLaunchArgument(
+        'rviz_config_file',
+        default_value=os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config.rviz'),
+        description='Full path to the RViz configuration file to use')
     
     # You can add declarations for any other arguments from gazebo.launch.py here
     # if you want to be able to set them from the command line, e.g., 'headless'.
@@ -49,7 +66,10 @@ def generate_launch_description():
         # Pass the launch arguments to the included launch file
         launch_arguments={
             'world': LaunchConfiguration('world'),
-            'robot_name': LaunchConfiguration('robot_name')
+            'robot_name': LaunchConfiguration('robot_name'),
+            'rviz_config_file': LaunchConfiguration('rviz_config_file'), # Pass the config file down
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+            'using_nav_2': LaunchConfiguration('using_nav_2')
         }.items()
     )
 
@@ -59,6 +79,9 @@ def generate_launch_description():
     # Add the declared arguments and the include action
     ld.add_action(declare_world_cmd)
     ld.add_action(declare_robot_name_cmd)
+    ld.add_action(declare_using_nav2_cmd)
+    ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_rviz_config_file_cmd)
     ld.add_action(start_simulation_cmd)
 
     return ld

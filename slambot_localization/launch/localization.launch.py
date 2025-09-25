@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Launch the robot_localization EKF node.
 
@@ -10,6 +9,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.conditions import IfCondition, UnlessCondition
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -40,9 +40,11 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true'
     )
 
-    # --- EKF Node ---
-    # Start the ekf_filter_node from the robot_localization package
+    # ================== Start EKF Node =================== #
+
+    # When not using Nav2, we launch in global namespace and just remap to slambot/odometry/filtered
     start_ekf_node = Node(
+        condition=UnlessCondition(LaunchConfiguration('using_nav_2')),
         package='robot_localization',
         executable='ekf_node',
         name='ekf_filter_node', # The node name is still unique
@@ -58,6 +60,28 @@ def generate_launch_description():
         ]
     )
 
+    # When we ARE Nav2, we launch in global namespace and remap slambot/odometry/filtered, and  slambot/tf, and slambot/tf_static
+    start_ekf_node_nav2 = Node(
+        condition=IfCondition(LaunchConfiguration('using_nav_2')),
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node', # The node name is still unique
+        output='screen',
+        # namespace=LaunchConfiguration('robot_name'), # <-- REMOVED: Run node in global namespace
+        parameters=[
+            ekf_config_path,
+            {'use_sim_time': LaunchConfiguration('use_sim_time')}
+        ],
+        # Remap the default output topic to the desired namespaced topic
+        remappings=[
+            ('/odometry/filtered', [LaunchConfiguration('robot_name'), '/odometry/filtered']),
+            ('/tf', [LaunchConfiguration('robot_name'), '/tf']),
+            ('/tf_static', [LaunchConfiguration('robot_name'), '/tf_static'])
+        ]
+    )
+
+
+
     # --- Create Launch Description ---
     ld = LaunchDescription()
 
@@ -65,5 +89,6 @@ def generate_launch_description():
     ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(start_ekf_node)
+    ld.add_action(start_ekf_node_nav2)
 
     return ld

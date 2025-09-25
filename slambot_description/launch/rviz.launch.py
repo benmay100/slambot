@@ -9,7 +9,7 @@ This launch file is responsible for visualizing the robot's state. It starts:
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -37,6 +37,11 @@ def generate_launch_description():
         'jsp_gui', 
         default_value='true',
         description='Flag to enable joint_state_publisher_gui')
+    
+    declare_using_nav2_cmd = DeclareLaunchArgument(
+        'using_nav_2', 
+        default_value='false',
+        description='Namespaces the /tf topics if set to true')
         
     declare_urdf_model_cmd = DeclareLaunchArgument(
         'urdf_model',
@@ -59,9 +64,26 @@ def generate_launch_description():
 
     # ================== Node Definitions =================== #
 
-    # Robot State Publisher Node
-    # Publishes TF transforms for the robot's links based on the URDF.
-    start_robot_state_publisher_cmd = Node(
+    # ---- Robot State Publisher ----
+    
+    # 1. Namespaced version for Nav2
+    start_robot_state_publisher_nav2_cmd = Node(
+        condition=IfCondition(LaunchConfiguration('using_nav_2')),
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        namespace=LaunchConfiguration('robot_name'),
+        output='screen',
+        parameters=[{
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+            'robot_description': robot_description_content,
+        }],
+        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')]
+    )
+
+    # 2. Global version for standalone use
+    start_robot_state_publisher_global_cmd = Node(
+        condition=UnlessCondition(LaunchConfiguration('using_nav_2')),
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
@@ -71,6 +93,7 @@ def generate_launch_description():
             'use_sim_time': LaunchConfiguration('use_sim_time'),
             'robot_description': robot_description_content,
         }]
+        # No remappings here
     )
 
     # Joint State Publisher GUI Node
@@ -84,15 +107,33 @@ def generate_launch_description():
         parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
     )
 
-    # RViz2 Node
-    # The primary visualization tool.
-    start_rviz_cmd = Node(
+    # ---- RViz2 Node ----
+
+    # 1. Namespaced version for Nav2
+    start_rviz_nav2_cmd = Node(
+        condition=IfCondition(LaunchConfiguration('using_nav_2')),
         package='rviz2',
         executable='rviz2',
-        name='rviz2', # Note: RViz itself is not typically namespaced
+        name='rviz2',
         output='screen',
-        arguments=['-d', LaunchConfiguration('rviz_config_file')], # Use the passed-in config file
+        arguments=['-d', LaunchConfiguration('rviz_config_file')],
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+        remappings=[
+            ('/tf', [LaunchConfiguration('robot_name'), '/tf']),
+            ('/tf_static', [LaunchConfiguration('robot_name'), '/tf_static'])
+        ]
+    )
+
+    # 2. Global version for standalone use
+    start_rviz_global_cmd = Node(
+        condition=UnlessCondition(LaunchConfiguration('using_nav_2')),
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', LaunchConfiguration('rviz_config_file')],
         parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
+        # No remappings here
     )
 
     # ================== Create Launch Description =================== #
@@ -105,10 +146,13 @@ def generate_launch_description():
     ld.add_action(declare_jsp_gui_cmd)
     ld.add_action(declare_urdf_model_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
+    ld.add_action(declare_using_nav2_cmd)
 
-    # Add nodes
-    ld.add_action(start_robot_state_publisher_cmd)
+    # Add nodes to the launch description
+    ld.add_action(start_robot_state_publisher_nav2_cmd)
+    ld.add_action(start_robot_state_publisher_global_cmd)
     ld.add_action(start_joint_state_publisher_gui_cmd)
-    ld.add_action(start_rviz_cmd)
+    ld.add_action(start_rviz_nav2_cmd)
+    ld.add_action(start_rviz_global_cmd)
 
     return ld
