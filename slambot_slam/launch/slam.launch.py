@@ -10,14 +10,14 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, EmitEvent,
-                            RegisterEventHandler, TimerAction)
+from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler, TimerAction
 from launch.events import matches_action
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import LifecycleNode
 from launch_ros.event_handlers import OnStateTransition
 from launch_ros.events.lifecycle import ChangeState
 from lifecycle_msgs.msg import Transition
+
 
 
 def generate_launch_description():
@@ -95,7 +95,6 @@ def generate_launch_description():
     )
 
 
-
     # --- Create Launch Description ---
     ld = LaunchDescription()
 
@@ -108,5 +107,6 @@ def generate_launch_description():
     ld.add_action(start_slam_toolbox_node)
     ld.add_action(configure_slam_node)
     ld.add_action(activate_slam_node)
+
 
     return ld

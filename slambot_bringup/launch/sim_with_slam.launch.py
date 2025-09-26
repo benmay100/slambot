@@ -56,8 +56,8 @@ def generate_launch_description():
     )
 
     # Path to the RViz configuration file
-    rviz_config_path = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_and_rviz_and_slam_config.rviz')
-    rviz_config_path_namespaced = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_and_rviz_and_slam_config_namespaced.rviz')
+    rviz_config_path = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_and_slam_config.rviz')
+    rviz_config_path_namespaced = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_and_slam_config_namespaced.rviz')
 
     # The rviz config file choice is conditional on the status of 'using_namespace.
     # It uses a case-insensitive check on 'using_namespace' to select the correct path.
@@ -71,7 +71,7 @@ def generate_launch_description():
         description='Full path to the RViz config file. Automatically selects namespaced version if using_namespace=True.'
     )
 
-    # ========= Start Gazebo, RVIZ and Localization - Using Gazebo Launch File ========= #
+    # ========= Start Gazebo and Localization - Using Gazebo Launch File ========= #
 
     # This includes the simulation environment (Gazebo, Localization, RViz)
     start_simulation_cmd = IncludeLaunchDescription(
