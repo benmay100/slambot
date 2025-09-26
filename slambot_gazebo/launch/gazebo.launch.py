@@ -48,21 +48,37 @@ def generate_launch_description():
         description='Whether to run Gazebo without a GUI')
     
     #Namespaces the /tf topics when using Nav2
-    declare_using_nav2_cmd = DeclareLaunchArgument(
-        'using_nav_2', 
-        default_value='false',
-        description='Namespaces the /tf topics if set to true')
+    declare_using_namespace_cmd = DeclareLaunchArgument(
+        'using_namespace', 
+        default_value='False',
+        description='Namespaces all topics (best for multiple robot setups) if set to true')
     
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='true',
         description='Use simulation (Gazebo) clock if true')
+    
+    declare_jsp_gui_cmd = DeclareLaunchArgument(
+        'jsp_gui', 
+        default_value='False',
+        description='Flag to enable joint_state_publisher_gui')
 
     # Path to the RViz configuration file
+    rviz_config_path = os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config.rviz')
+    rviz_config_path_namespaced = os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config_namespaced.rviz')
+
+    # The rviz config file choice is conditional on the status of 'using_namespace.
+    # It uses a case-insensitive check on 'using_namespace' to select the correct path.
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config_file',
-        default_value=os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config.rviz'),
-        description='Full path to the RViz configuration file to use')
+        default_value=PythonExpression([
+            "'", rviz_config_path_namespaced, "' if '",
+            LaunchConfiguration('using_namespace'),
+            "'.lower() == 'true' else '", rviz_config_path, "'"
+        ]),
+        description='Full path to the RViz config file. Automatically selects namespaced version if using_namespace=True.'
+    )
+
 
     # ================== Set Environment Variables =================== #
     
@@ -82,23 +98,32 @@ def generate_launch_description():
     
     # --- Set GAZEBO_MODEL_PATH --- this is handled from inside the package.xml file - see near the bottom of the file some important exports!
 
+
     # ================== Start Gazebo Simulation =================== #
-    
-    gazebo_launch = IncludeLaunchDescription(
+
+    world_path = PathJoinSubstitution([pkg_slambot_gazebo, 'worlds', LaunchConfiguration('world')])
+
+    gz_sim_server = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'])
         ),
-        launch_arguments={
-            'gz_args': PathJoinSubstitution([pkg_slambot_gazebo, 'worlds', LaunchConfiguration('world')]), 
-            'on_exit_shutdown': 'True'
-        }.items(),
+        launch_arguments={'gz_args': ['-r -s ', world_path]}.items()
+    )
+
+    gz_sim_gui = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'])
+        ),
+        launch_arguments={'gz_args': '-g'}.items(),
+        #Below tells gz_sim_gui not to launch if 'headless' set to True
+        condition=IfCondition(PythonExpression(['not ', LaunchConfiguration('headless')]))
     )
 
     # ================== Start ROS-Gazebo Bridge =================== #
     
-    #If not using Nav2 (we don't remap the /tf topic)
+    #If not using namespacing (we don't remap any topics)
     start_ros_gz_bridge_cmd = Node(
-        condition=UnlessCondition(LaunchConfiguration('using_nav_2')),
+        condition=UnlessCondition(LaunchConfiguration('using_namespace')),
         package='ros_gz_bridge',
         executable='parameter_bridge',
         parameters=[{
@@ -106,21 +131,12 @@ def generate_launch_description():
                 pkg_slambot_gazebo, 'config', 'ros_gz_bridge.yaml'
             ])
         }],
-        remappings=[
-            ('/scan', [LaunchConfiguration('robot_name'), '/scan']),
-            ('/imu/data', [LaunchConfiguration('robot_name'), '/imu/data']),
-            ('/camera/image_raw', [LaunchConfiguration('robot_name'), '/camera/image_raw']),
-            ('/camera/camera_info', [LaunchConfiguration('robot_name'), '/camera/camera_info']),
-            ('/odom', [LaunchConfiguration('robot_name'), '/odom']),
-            ('/joint_states', [LaunchConfiguration('robot_name'), '/joint_states']),
-            ('/cmd_vel', [LaunchConfiguration('robot_name'), '/cmd_vel']),
-        ],
         output='screen'
     )
 
-    #If using Nav2 (we namespace to slambot/tf)
-    start_ros_gz_bridge_nav2_cmd = Node(
-        condition=IfCondition(LaunchConfiguration('using_nav_2')),
+    #If using namespacing (we remap topics to 'slambot/...')
+    start_ros_gz_bridge_namespaced_cmd = Node(
+        condition=IfCondition(LaunchConfiguration('using_namespace')),
         package='ros_gz_bridge',
         executable='parameter_bridge',
         parameters=[{
@@ -136,7 +152,7 @@ def generate_launch_description():
             ('/odom', [LaunchConfiguration('robot_name'), '/odom']),
             ('/joint_states', [LaunchConfiguration('robot_name'), '/joint_states']),
             ('/cmd_vel', [LaunchConfiguration('robot_name'), '/cmd_vel']),
-            ('/tf', [LaunchConfiguration('robot_name'), '/tf']), # <--- this was added
+            ('/tf', [LaunchConfiguration('robot_name'), '/tf']), # <--- this is important
         ],
         output='screen'
     )
@@ -151,8 +167,8 @@ def generate_launch_description():
             'robot_name': LaunchConfiguration('robot_name'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
             'rviz_config_file': LaunchConfiguration('rviz_config_file'), # Pass the config file down
-            'jsp_gui': 'false',
-            'using_nav_2': LaunchConfiguration('using_nav_2')
+            'jsp_gui': LaunchConfiguration('jsp_gui'),
+            'using_namespace': LaunchConfiguration('using_namespace')
         }.items()
     )
 
@@ -165,13 +181,28 @@ def generate_launch_description():
         launch_arguments={
             'robot_name': LaunchConfiguration('robot_name'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
-            'using_nav_2': LaunchConfiguration('using_nav_2')
+            'using_namespace': LaunchConfiguration('using_namespace')
         }.items()
     )
 
     # ================== Spawn Robot into Gazebo =================== #
     
     spawn_robot_cmd = Node(
+        condition=UnlessCondition(LaunchConfiguration('using_namespace')),
+        package='ros_gz_sim',
+        executable='create',
+        arguments=[
+            '-name', LaunchConfiguration('robot_name'),
+            '-x', '0.0',
+            '-y', '0.0',
+            '-z', '0.2',
+            '-topic', 'robot_description' 
+        ],
+        output='screen'
+    )
+
+    spawn_robot_namespaced_cmd = Node(
+        condition=IfCondition(LaunchConfiguration('using_namespace')),
         package='ros_gz_sim',
         executable='create',
         arguments=[
@@ -192,17 +223,20 @@ def generate_launch_description():
     ld.add_action(declare_world_cmd)
     ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_headless_cmd)
-    ld.add_action(declare_using_nav2_cmd)
+    ld.add_action(declare_using_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_jsp_gui_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
 
     # Add actions
     ld.add_action(set_gz_sim_resource_path)
-    ld.add_action(gazebo_launch)
+    ld.add_action(gz_sim_server)
+    ld.add_action(gz_sim_gui)
     ld.add_action(start_ros_gz_bridge_cmd)
-    ld.add_action(start_ros_gz_bridge_nav2_cmd)
+    ld.add_action(start_ros_gz_bridge_namespaced_cmd)
     ld.add_action(start_rviz_and_description_cmd)
     ld.add_action(start_ekf_localization_cmd)
     ld.add_action(spawn_robot_cmd)
+    ld.add_action(spawn_robot_namespaced_cmd)
 
     return ld

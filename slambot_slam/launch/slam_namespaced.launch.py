@@ -46,11 +46,11 @@ def generate_launch_description():
         description='The namespace of the robot'
     )
 
-    # =================== SLAM Toolbox Node =================== #
 
-    
+    # =================== SLAM Toolbox Node =================== #
+ 
     # We launch the SLAM node as a LifecycleNode to manage its state
-    start_slam_toolbox_node = LifecycleNode(
+    start_slam_toolbox_node_namespaced = LifecycleNode(
         package='slam_toolbox',
         executable='async_slam_toolbox_node',
         name='slam_toolbox',
@@ -59,6 +59,12 @@ def generate_launch_description():
         parameters=[
           LaunchConfiguration('slam_params_file'),
           {'use_sim_time': True} # <-- CRITICAL
+        ],
+        remappings=[
+            ('scan', [LaunchConfiguration('robot_name'), '/scan']),
+            ('map', [LaunchConfiguration('robot_name'), '/map']),
+            ('tf', [LaunchConfiguration('robot_name'), '/tf']),
+            ('tf_static', [LaunchConfiguration('robot_name'), '/tf_static'])
         ]
     )
 
@@ -66,12 +72,12 @@ def generate_launch_description():
     # This sequence automates the manual "ros2 lifecycle set" commands.
 
     # 1. After a 3-second delay, issue the "configure" transition
-    configure_slam_node = TimerAction(
+    configure_slam_node_namespaced = TimerAction(
         period=3.0,
         actions=[
             EmitEvent(
                 event=ChangeState(
-                    lifecycle_node_matcher=matches_action(start_slam_toolbox_node),
+                    lifecycle_node_matcher=matches_action(start_slam_toolbox_node_namespaced),
                     transition_id=Transition.TRANSITION_CONFIGURE
                 )
             )
@@ -80,21 +86,19 @@ def generate_launch_description():
 
     # 2. Once the node transitions to "inactive" (after configuring),
     #    wait another 3 seconds and issue the "activate" transition.
-    activate_slam_node = RegisterEventHandler(
+    activate_slam_node_namespaced = RegisterEventHandler(
         OnStateTransition(
-            target_lifecycle_node=start_slam_toolbox_node,
+            target_lifecycle_node=start_slam_toolbox_node_namespaced,
             start_state="configuring",
             goal_state="inactive",
             entities=[
                 TimerAction(
                     period=3.0,
-                    actions=[EmitEvent(event=ChangeState(lifecycle_node_matcher=matches_action(start_slam_toolbox_node),transition_id=Transition.TRANSITION_ACTIVATE))]
+                    actions=[EmitEvent(event=ChangeState(lifecycle_node_matcher=matches_action(start_slam_toolbox_node_namespaced),transition_id=Transition.TRANSITION_ACTIVATE))]
                 )
             ]
         )
     )
-
-
 
     # --- Create Launch Description ---
     ld = LaunchDescription()
@@ -105,8 +109,8 @@ def generate_launch_description():
     ld.add_action(declare_robot_name_cmd)
 
     # Add the slam_toolbox node to the launch description
-    ld.add_action(start_slam_toolbox_node)
-    ld.add_action(configure_slam_node)
-    ld.add_action(activate_slam_node)
+    ld.add_action(start_slam_toolbox_node_namespaced)
+    ld.add_action(configure_slam_node_namespaced)
+    ld.add_action(activate_slam_node_namespaced)
 
     return ld

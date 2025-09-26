@@ -17,7 +17,7 @@ ekf_filter_node:
     world_frame: odom #We aren't using prefixed frames here but if you were (e.g. myrobot_odom) then need to account for that here
 
     # SENSOR INPUT 0: WHEEL ODOMETRY
-    odom0: odom  #We are using namespaced topics, hence 'robotname/topic'
+    odom0: /slambot/odom  #We are using namespaced topics, hence 'robotname/topic'
     odom0_config: [false, false, false,
                    false, false, false,
                    true,  true,  false,
@@ -43,7 +43,7 @@ ekf_filter_node:
                              0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
 
     # SENSOR INPUT 1: IMU DATA
-    imu0: imu/data #We are using namespaced topics, hence 'robotname/topic'
+    imu0: /slambot/imu/data #We are using namespaced topics, hence 'robotname/topic'
     imu0_config: [false, false, false,
                   true,  true,  true,
                   false, false, false,

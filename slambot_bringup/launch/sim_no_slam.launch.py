@@ -12,7 +12,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 def generate_launch_description():
     """Generate the launch description for the simulation without SLAM."""
@@ -26,7 +26,7 @@ def generate_launch_description():
     
     declare_world_cmd = DeclareLaunchArgument(
         'world',
-        default_value='maze_world_1.sdf',
+        default_value='indoor_world_1.sdf',
         description='The world file to launch in Gazebo'
     )
 
@@ -36,22 +36,40 @@ def generate_launch_description():
         description='The name/namespace for the robot'
     )
 
+    # Whether to run Gazebo without a GUI
+    declare_headless_cmd = DeclareLaunchArgument(
+        'headless',
+        default_value='False',
+        description='Whether to run Gazebo without a GUI')
+
     #Namespaces the /tf topics when using Nav2
-    declare_using_nav2_cmd = DeclareLaunchArgument(
-        'using_nav_2', 
-        default_value='false',
-        description='Namespaces the /tf topics if set to true')
+    declare_using_namespace_cmd = DeclareLaunchArgument(
+        'using_namespace', 
+        default_value='False',
+        description='Namespaces all topics (best for multiple robot setups) if set to true')
+    
     
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='true',
         description='Use simulation (Gazebo) clock if true')
     
+
     # Path to the RViz configuration file
+    rviz_config_path = os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config.rviz')
+    rviz_config_path_namespaced = os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config_namespaced.rviz')
+
+    # The rviz config file choice is conditional on the status of 'using_namespace.
+    # It uses a case-insensitive check on 'using_namespace' to select the correct path.
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config_file',
-        default_value=os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config.rviz'),
-        description='Full path to the RViz configuration file to use')
+        default_value=PythonExpression([
+            "'", rviz_config_path_namespaced, "' if '",
+            LaunchConfiguration('using_namespace'),
+            "'.lower() == 'true' else '", rviz_config_path, "'"
+        ]),
+        description='Full path to the RViz config file. Automatically selects namespaced version if using_namespace=True.'
+    )
     
     # You can add declarations for any other arguments from gazebo.launch.py here
     # if you want to be able to set them from the command line, e.g., 'headless'.
@@ -69,7 +87,8 @@ def generate_launch_description():
             'robot_name': LaunchConfiguration('robot_name'),
             'rviz_config_file': LaunchConfiguration('rviz_config_file'), # Pass the config file down
             'use_sim_time': LaunchConfiguration('use_sim_time'),
-            'using_nav_2': LaunchConfiguration('using_nav_2')
+            'using_namespace': LaunchConfiguration('using_namespace'),
+            'headless': LaunchConfiguration('headless')
         }.items()
     )
 
@@ -79,7 +98,8 @@ def generate_launch_description():
     # Add the declared arguments and the include action
     ld.add_action(declare_world_cmd)
     ld.add_action(declare_robot_name_cmd)
-    ld.add_action(declare_using_nav2_cmd)
+    ld.add_action(declare_headless_cmd)
+    ld.add_action(declare_using_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
     ld.add_action(start_simulation_cmd)

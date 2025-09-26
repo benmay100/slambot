@@ -23,6 +23,7 @@ def generate_launch_description():
     # --- EKF Configuration File ---
     # Construct the full path to the EKF configuration file
     ekf_config_path = os.path.join(pkg_slambot_localization, 'config', 'ekf.yaml')
+    ekf_config_path_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced.yaml')
 
     # --- Declare Launch Arguments ---
     # This argument is no longer needed for the namespace but is kept for potential future use
@@ -40,11 +41,18 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true'
     )
 
+    declare_using_namespace_cmd = DeclareLaunchArgument(
+        'using_namespace', 
+        default_value='False',
+        description='Namespaces all topics (best for multiple robot setups) if set to true'
+    )
+
+
     # ================== Start EKF Node =================== #
 
-    # When not using Nav2, we launch in global namespace and just remap to slambot/odometry/filtered
+    # When NOT using namespace
     start_ekf_node = Node(
-        condition=UnlessCondition(LaunchConfiguration('using_nav_2')),
+        condition=UnlessCondition(LaunchConfiguration('using_namespace')),
         package='robot_localization',
         executable='ekf_node',
         name='ekf_filter_node', # The node name is still unique
@@ -54,22 +62,18 @@ def generate_launch_description():
             ekf_config_path,
             {'use_sim_time': LaunchConfiguration('use_sim_time')}
         ],
-        # Remap the default output topic to the desired namespaced topic
-        remappings=[
-            ('/odometry/filtered', [LaunchConfiguration('robot_name'), '/odometry/filtered'])
-        ]
     )
 
-    # When we ARE Nav2, we launch in global namespace and remap slambot/odometry/filtered, and  slambot/tf, and slambot/tf_static
-    start_ekf_node_nav2 = Node(
-        condition=IfCondition(LaunchConfiguration('using_nav_2')),
+    # When NOT using namespace - we launch in GLOBAL namespace (otherwise doesn't work) and remap slambot/odometry/filtered, and  slambot/tf, and slambot/tf_static
+    start_ekf_node_namespaced = Node(
+        condition=IfCondition(LaunchConfiguration('using_namespace')),
         package='robot_localization',
         executable='ekf_node',
         name='ekf_filter_node', # The node name is still unique
         output='screen',
         # namespace=LaunchConfiguration('robot_name'), # <-- REMOVED: Run node in global namespace
         parameters=[
-            ekf_config_path,
+            ekf_config_path_namespaced,
             {'use_sim_time': LaunchConfiguration('use_sim_time')}
         ],
         # Remap the default output topic to the desired namespaced topic
@@ -88,7 +92,8 @@ def generate_launch_description():
     # Add actions to the launch description
     ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_using_namespace_cmd)
     ld.add_action(start_ekf_node)
-    ld.add_action(start_ekf_node_nav2)
+    ld.add_action(start_ekf_node_namespaced)
 
     return ld

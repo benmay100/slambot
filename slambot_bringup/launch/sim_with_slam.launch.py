@@ -11,17 +11,10 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, EmitEvent, IncludeLaunchDescription,
-                            RegisterEventHandler, TimerAction)
-from launch.conditions import IfCondition
-from launch.event_handlers import OnProcessStart
-from launch.events import matches_action
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import LifecycleNode
-from launch_ros.event_handlers import OnStateTransition
-from launch_ros.events.lifecycle import ChangeState
-from lifecycle_msgs.msg import Transition
+from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.conditions import IfCondition, UnlessCondition
 
 def generate_launch_description():
     """Generate the launch description for the simulation with SLAM."""
@@ -43,11 +36,17 @@ def generate_launch_description():
         description='The name/namespace for the robot'
     )
 
+    # Whether to run Gazebo without a GUI
+    declare_headless_cmd = DeclareLaunchArgument(
+        'headless',
+        default_value='False',
+        description='Whether to run Gazebo without a GUI')
+
     #Namespaces the /tf topics when using Nav2
-    declare_using_nav2_cmd = DeclareLaunchArgument(
-        'using_nav_2', 
-        default_value='false',
-        description='Namespaces the /tf topics if set to true')
+    declare_using_namespace_cmd = DeclareLaunchArgument(
+        'using_namespace', 
+        default_value='False',
+        description='Namespaces all topics (best for multiple robot setups) if set to true')
 
     # This argument allows us to specify the SLAM params file from the command line
     declare_slam_params_file_cmd = DeclareLaunchArgument(
@@ -57,13 +56,23 @@ def generate_launch_description():
     )
 
     # Path to the RViz configuration file
+    rviz_config_path = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_and_rviz_and_slam_config.rviz')
+    rviz_config_path_namespaced = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_and_rviz_and_slam_config_namespaced.rviz')
+
+    # The rviz config file choice is conditional on the status of 'using_namespace.
+    # It uses a case-insensitive check on 'using_namespace' to select the correct path.
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config_file',
-        default_value=os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_rviz_and_slam_config.rviz'),
-        description='Full path to the RViz configuration file to use')
+        default_value=PythonExpression([
+            "'", rviz_config_path_namespaced, "' if '",
+            LaunchConfiguration('using_namespace'),
+            "'.lower() == 'true' else '", rviz_config_path, "'"
+        ]),
+        description='Full path to the RViz config file. Automatically selects namespaced version if using_namespace=True.'
+    )
 
+    # ========= Start Gazebo, RVIZ and Localization - Using Gazebo Launch File ========= #
 
-    # --- Include Gazebo Launch File ---
     # This includes the simulation environment (Gazebo, Localization, RViz)
     start_simulation_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -73,66 +82,39 @@ def generate_launch_description():
             'world': LaunchConfiguration('world'),
             'robot_name': LaunchConfiguration('robot_name'),
             'rviz_config_file': LaunchConfiguration('rviz_config_file'), # Pass the config file down
-            'using_nav_2': LaunchConfiguration('using_nav_2')
+            'using_namespace': LaunchConfiguration('using_namespace'),
+            'headless': LaunchConfiguration('headless')
         }.items()
     )
 
-    # --- SLAM Toolbox Node ---
-    # We launch the SLAM node as a LifecycleNode to manage its state
-    start_slam_toolbox_node = LifecycleNode(
-        package='slam_toolbox',
-        executable='async_slam_toolbox_node',
-        name='slam_toolbox',
-        namespace='',
-        output='screen',
-        parameters=[
-          LaunchConfiguration('slam_params_file'),
-          {'use_sim_time': True} # <-- CRITICAL
-        ],
-        remappings=[
-            ('scan', [LaunchConfiguration('robot_name'), '/scan']),
-            ('map', [LaunchConfiguration('robot_name'), '/map']) 
-        ]
+    # ========= Start SLAM - Using Slam Launch File ========= #
+
+    # 1. If NOT using namespacing...
+    start_slam_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_slambot_slam, 'launch', 'slam.launch.py')
+        ),
+        launch_arguments={
+            'world': LaunchConfiguration('world'),
+            'robot_name': LaunchConfiguration('robot_name'),
+        }.items(),
+        #Below tells this NOT to launch if 'using_namespace' set to True
+        condition=IfCondition(PythonExpression(['not ', LaunchConfiguration('using_namespace')]))
     )
 
-    # --- Lifecycle Management for SLAM Node ---
-    # This sequence automates the manual "ros2 lifecycle set" commands.
-
-    # 1. After a 3-second delay, issue the "configure" transition
-    configure_slam_node = TimerAction(
-        period=3.0,
-        actions=[
-            EmitEvent(
-                event=ChangeState(
-                    lifecycle_node_matcher=matches_action(start_slam_toolbox_node),
-                    transition_id=Transition.TRANSITION_CONFIGURE
-                )
-            )
-        ]
+    # 1. If using namespacing...
+    start_slam_cmd_namespaced = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_slambot_slam, 'launch', 'slam_namespaced.launch.py')
+        ),
+        launch_arguments={
+            'world': LaunchConfiguration('world'),
+            'robot_name': LaunchConfiguration('robot_name'),
+        }.items(),
+        #Below tells this NOT to launch if 'using_namespace' set to False
+        condition=IfCondition(PythonExpression([' ', LaunchConfiguration('using_namespace')]))
     )
-
-    # 2. Once the node transitions to "inactive" (after configuring),
-    #    wait another 3 seconds and issue the "activate" transition.
-    activate_slam_node = RegisterEventHandler(
-        OnStateTransition(
-            target_lifecycle_node=start_slam_toolbox_node,
-            start_state="configuring",
-            goal_state="inactive",
-            entities=[
-                TimerAction(
-                    period=3.0,
-                    actions=[
-                        EmitEvent(
-                            event=ChangeState(
-                                lifecycle_node_matcher=matches_action(start_slam_toolbox_node),
-                                transition_id=Transition.TRANSITION_ACTIVATE
-                            )
-                        )
-                    ]
-                )
-            ]
-        )
-    )
+    
 
     # --- Create Launch Description ---
     ld = LaunchDescription()
@@ -140,15 +122,15 @@ def generate_launch_description():
     # Add the declared arguments
     ld.add_action(declare_world_cmd)
     ld.add_action(declare_robot_name_cmd)
-    ld.add_action(declare_using_nav2_cmd)
+    ld.add_action(declare_headless_cmd)
+    ld.add_action(declare_using_namespace_cmd)
     ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
     
     # Add the actions to launch and manage the nodes
     ld.add_action(start_simulation_cmd)
-    ld.add_action(start_slam_toolbox_node)
-    ld.add_action(configure_slam_node)
-    ld.add_action(activate_slam_node)
+    ld.add_action(start_slam_cmd)
+    ld.add_action(start_slam_cmd_namespaced)
 
     return ld
 
