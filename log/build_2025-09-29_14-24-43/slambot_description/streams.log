@@ -1,0 +1,65 @@
+[0.007s] Invoking command in '/home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/ben-may/ros_workspaces/slambot_ws2/src/slambot_description -DCMAKE_INSTALL_PREFIX=/home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description
+[0.174s] -- The C compiler identification is GNU 13.3.0
+[0.297s] -- The CXX compiler identification is GNU 13.3.0
+[0.325s] -- Detecting C compiler ABI info
+[0.509s] -- Detecting C compiler ABI info - done
+[0.516s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.517s] -- Detecting C compile features
+[0.517s] -- Detecting C compile features - done
+[0.525s] -- Detecting CXX compiler ABI info
+[0.632s] -- Detecting CXX compiler ABI info - done
+[0.637s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.638s] -- Detecting CXX compile features
+[0.638s] -- Detecting CXX compile features - done
+[0.643s] -- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.782s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[0.925s] -- Configuring done (0.9s)
+[0.926s] -- Generating done (0.0s)
+[0.928s] -- Build files have been written to: /home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description
+[0.931s] Invoked command in '/home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/ben-may/ros_workspaces/slambot_ws2/src/slambot_description -DCMAKE_INSTALL_PREFIX=/home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description
+[0.932s] Invoking command in '/home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description -- -j24 -l24
+[0.964s] Invoked command in '/home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description -- -j24 -l24
+[0.983s] Invoking command in '/home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description
+[0.999s] -- Install configuration: ""
+[0.999s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//launch
+[0.999s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//launch/rviz.launch.py
+[1.000s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets
+[1.000s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets/camera_link.part
+[1.000s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets/base_link.stl
+[1.000s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets/camera_link.stl
+[1.001s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets/base_link.part
+[1.001s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets/lidar_link.part
+[1.001s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets/wheel_link.stl
+[1.003s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets/wheel_link.part
+[1.003s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//assets/lidar_link.stl
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/modules
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/modules/lidar.xacro
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/modules/camera.xacro
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/modules/chassis_and_wheels.xacro
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/modules/imu.xacro
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/xacro_properties
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/xacro_properties/xacro_properties.xacro
+[1.012s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/gazebo
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/gazebo/gazebo_plugins.xacro
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/gazebo/gazebo_properties.xacro
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//urdf/slambot.urdf.xacro
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//rviz
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//rviz/rviz_config_namespaced.rviz
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description//rviz/rviz_config.rviz
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/ament_index/resource_index/package_run_dependencies/slambot_description
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/ament_index/resource_index/parent_prefix_path/slambot_description
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/environment/ament_prefix_path.sh
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/environment/ament_prefix_path.dsv
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/environment/path.sh
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/environment/path.dsv
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/local_setup.bash
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/local_setup.sh
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/local_setup.zsh
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/local_setup.dsv
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/package.dsv
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/ament_index/resource_index/packages/slambot_description
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/cmake/slambot_descriptionConfig.cmake
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/cmake/slambot_descriptionConfig-version.cmake
+[1.013s] -- Installing: /home/ben-may/ros_workspaces/slambot_ws2/src/install/slambot_description/share/slambot_description/package.xml
+[1.013s] Invoked command in '/home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/ben-may/ros_workspaces/slambot_ws2/src/build/slambot_description

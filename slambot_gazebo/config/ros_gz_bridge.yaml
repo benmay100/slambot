@@ -56,7 +56,12 @@
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
   direction: GZ_TO_ROS
-  lazy: false
+  # REPLACE 'lazy: false' with this block to fix the QoS mismatch
+  qos_overrides:
+    reliability: best_effort
+    durability: volatile
+    history: keep_last
+    depth: 5
 
 #Used for camera
 - ros_topic_name: "/camera/camera_info"

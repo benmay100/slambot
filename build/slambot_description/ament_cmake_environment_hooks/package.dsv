@@ -1,0 +1,4 @@
+source;share/slambot_description/local_setup.bash
+source;share/slambot_description/local_setup.dsv
+source;share/slambot_description/local_setup.sh
+source;share/slambot_description/local_setup.zsh

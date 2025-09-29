@@ -28,7 +28,8 @@
   </link>
   <!-- Joint from base_link to lidar_link -->
   <joint name="lidar_joint" type="fixed">
-    <origin xyz="-0.0440219 2.92864e-17 0.09" rpy="3.14159 -0 0"/>
+    <!--<origin xyz="-0.0440219 2.92864e-17 0.09" rpy="3.14159 -0 0"/>--> <!--Changed because lidar z-axis was actually pointing DOWN!-->
+    <origin xyz="-0.0440219 2.92864e-17 0.105" rpy="0 -0 0"/>
     <parent link="base_link"/>
     <child link="lidar_link"/>
     <axis xyz="0 0 1"/>

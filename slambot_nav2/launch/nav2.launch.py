@@ -3,30 +3,27 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.conditions import IfCondition
+
 
 def generate_launch_description():
     # 1. Get the path to the official Nav2 bringup launch file
     nav2_bringup_dir = get_package_share_directory('nav2_bringup')
-    nav2_launch_file = os.path.join(nav2_bringup_dir, 'launch', 'bringup_launch.py')
+    slambot_navigation_dir = get_package_share_directory('slambot_nav2')
+    
+    # 2. File paths
+    map_file_path = os.path.join(slambot_navigation_dir, 'maps', 'my_maze_map_1.yaml')
+    params_file_path = os.path.join(slambot_navigation_dir, 'config', 'nav2_custom_params.yaml')
 
-    # 2. Define the path to YOUR map file
-    # Make sure 'my_map.yaml' is in the 'maps' directory of your package
-    map_file_path = PathJoinSubstitution([
-        FindPackageShare('slambot_nav2'), # <-- Change to your package name
-        'maps',
-        'my_maze_map_1.yaml' # <-- This is a default, if you want a different map, change it from launch file in slambot_bringup
-    ])
 
-    # 3. Define the path to YOUR custom nav2_params.yaml
-    params_file_path = PathJoinSubstitution([
-        FindPackageShare('slambot_nav2'), # <-- Change to your package name
-        'config',
-        'nav2_params.yaml' # <-- Your custom params file
-    ])
+    # 3. Declare the launch arguments
+    declare_robot_name_cmd = DeclareLaunchArgument(
+        'robot_name',
+        default_value='slambot',
+        description='The name/namespace for the robot'
+    )
 
-    # 4. Declare the launch arguments
     declare_map_cmd = DeclareLaunchArgument(
         'map',
         default_value=map_file_path,
@@ -37,36 +34,61 @@ def generate_launch_description():
         default_value=params_file_path,
         description='Full path to the Nav2 parameters file')
 
-    declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='slambot', # <-- Set your desired namespace here
-        description='Top-level namespace for the Nav2 stack')
-
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='true', # <-- Set to true for simulation
         description='Use simulation (Gazebo) clock if true')
+    
+    #Namespaces the /tf topics when using Nav2
+    declare_using_namespace_cmd = DeclareLaunchArgument(
+        'using_namespace', 
+        default_value='False',
+        description='Namespaces all topics (best for multiple robot setups) if set to true'
+    )
 
-    # 5. Create the IncludeLaunchDescription action to call bringup_launch.py
+
+    # ============== Nav2 Launch  =======================#
+
+    #1. If NOT using namespaces
     start_nav2_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(nav2_launch_file),
+        PythonLaunchDescriptionSource(
+            os.path.join(nav2_bringup_dir, 'launch', 'bringup_launch.py')
+        ),
         launch_arguments={
             # Arguments for bringup_launch.py
-            'slam': 'False',               # We are not doing SLAM, we are navigating
-            'use_localization': 'True',    # We want to use AMCL for localization
             'map': LaunchConfiguration('map'),
-            'namespace': LaunchConfiguration('namespace'),
+            'params_file': LaunchConfiguration('params_file'),
+            'use_sim_time': LaunchConfiguration('use_sim_time')
+        }.items(),
+        condition=IfCondition(PythonExpression(['not ', LaunchConfiguration('using_namespace')]))
+    )
+
+    #2. If using namespaces
+    start_nav2_cmd_namespaced = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(nav2_bringup_dir, 'launch', 'bringup_launch.py')
+        ),
+        launch_arguments={
+            # Arguments for bringup_launch.py
+            'map': LaunchConfiguration('map'),
+            'namespace': LaunchConfiguration('robot_name'),
             'use_namespace': 'True',       # THIS IS THE KEY: It activates PushROSNamespace
             'params_file': LaunchConfiguration('params_file'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
-            'autostart': 'true'
-        }.items()
+        }.items(),
+        condition=IfCondition(PythonExpression([' ', LaunchConfiguration('using_namespace')]))
     )
 
-    return LaunchDescription([
-        declare_map_cmd,
-        declare_params_cmd,
-        declare_namespace_cmd,
-        declare_use_sim_time_cmd,
-        start_nav2_cmd
-    ])
+    # --- Create Launch Description ---
+    ld = LaunchDescription()
+
+    # Add the declared arguments and the include action
+    ld.add_action(declare_robot_name_cmd)
+    ld.add_action(declare_map_cmd)
+    ld.add_action(declare_params_cmd)
+    ld.add_action(declare_use_sim_time_cmd)  
+    ld.add_action(declare_using_namespace_cmd)
+    ld.add_action(start_nav2_cmd)
+    ld.add_action(start_nav2_cmd_namespaced)
+
+    return ld
