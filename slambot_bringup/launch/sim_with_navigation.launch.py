@@ -6,6 +6,7 @@ This launch file acts as an entry point and includes the main gazebo.launch.py, 
 
 You can launch with or without a namespaced environment, but MUST not use localization in order for Nav2 to work properly.
 
+
 """
 
 import os
