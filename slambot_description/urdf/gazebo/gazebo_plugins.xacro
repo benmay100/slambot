@@ -61,17 +61,18 @@
         <sensor name='lidar' type='gpu_lidar'>
             <pose relative_to='lidar_link'>0 0 0 0 0 0</pose>
             <topic>/scan</topic>
-            <update_rate>2</update_rate>
+            <update_rate>10</update_rate> <!-- Update rate of 10Hz is recommended for slam /nav2 setups -->
             <always_on>1</always_on>
             <visualize>1</visualize>
             <gz_frame_id>lidar_link</gz_frame_id> <!-- This will give a warning on terminal, but that's a gazebo harmonic issue, so ignore it-->
             <lidar>
                 <scan>
+                    <!--When doing SLAM always better to have a 360 lidar as better for loop closures-->
                     <horizontal>
-                        <samples>640</samples>
-                        <resolution>1</resolution>
-                        <min_angle>-1.396263</min_angle>
-                        <max_angle>1.396263</max_angle>
+                    <samples>720</samples>
+                    <resolution>1.000000</resolution>
+                    <min_angle>0.000000</min_angle>
+                    <max_angle>6.280000</max_angle>
                     </horizontal>
                 </scan>
                 <range>

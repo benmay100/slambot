@@ -22,8 +22,8 @@ def generate_launch_description():
     
     # --- EKF Configuration File ---
     # Construct the full path to the EKF configuration file
-    ekf_config_path = os.path.join(pkg_slambot_localization, 'config', 'ekf.yaml')
-    ekf_config_path_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced.yaml')
+    ekf_config_path = os.path.join(pkg_slambot_localization, 'config', 'ekf_v2.yaml')
+    ekf_config_path_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced_v2.yaml')
 
     # --- Declare Launch Arguments ---
     # This argument is no longer needed for the namespace but is kept for potential future use

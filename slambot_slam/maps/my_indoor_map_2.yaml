@@ -1,0 +1,7 @@
+image: my_indoor_map_2.pgm
+mode: trinary
+resolution: 0.050
+origin: [-4.853, -3.971, 0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196

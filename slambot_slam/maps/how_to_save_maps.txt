@@ -6,12 +6,17 @@ The map only exists in the node's memory, so it must be running to save it.
 1. Open a New Terminal: Open a new terminal and source your ROS 2 workspace
 
 2. Now launch the custom map_saver.launch.py file using:
-    ros2 launch slambot_slam map_saver.launch.py map_name:=my_maze_map  (or whatever you want to call it!)
+
+    * If not namespacing.... 'ros2 launch slambot_slam map_saver.launch.py map_name:=my_maze_map'  (or whatever you want to call it!)
+
+    * If namespacing.... 'ros2 launch slambot_slam map_saver.launch.py using_namespace:=True map_name:=my_maze_map'  (or whatever you want to call it!)
+
 --------------
 
 After you run the command, you will see a confirmation in the terminal:
-slambot_ws2/install/slambot_slam/share/slambot_slam/maps/my_maze_map.pgm
-slambot_ws2/install/slambot_slam/share/slambot_slam/maps/my_maze_map.yaml
+
+Saving map from '/map' topic to '/home/<your-username>/nav2_maps/my_maze_map' file
 
 
-Note... if you then want the maps in the /src directory, you need to copy them from the /share directory into it! Note that both the slambot_slam package, and the slambot_nav2 package have /maps directories. 
+
+Note... if you then want the maps in the /src directory, you need to copy them from the /nav2_maps directory in your home folder into it! 

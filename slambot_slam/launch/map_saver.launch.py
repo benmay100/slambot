@@ -11,14 +11,24 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
+from launch.conditions import IfCondition
 
 def generate_launch_description():
     """Generate the launch description to save the map."""
 
     # Get the path to the slambot_slam package's share directory
     pkg_slambot_slam = get_package_share_directory('slambot_slam')
+
+    # --- New Launch Argument for Map Save Directory ---
+    # We will use this to save to a *writable* path like the source directory.
+    # We can default it to a common temporary location to prevent the install-folder error.
+    declare_save_dir_cmd = DeclareLaunchArgument(
+        'map_save_dir',
+        default_value=os.path.join(os.environ['HOME'], 'nav2_maps'), # Default to a safe, writable folder in your home directory
+        description='The directory where the map will be saved'
+    )
 
     # --- Declare Launch Arguments ---
     declare_map_name_cmd = DeclareLaunchArgument(
@@ -34,12 +44,19 @@ def generate_launch_description():
         description='The namespace of the robot to save the map from'
     )
 
+    declare_using_namespace_cmd = DeclareLaunchArgument(
+        'using_namespace', 
+        default_value='False',
+        description='Namespaces the /map topic if set to true'
+    )
+
     # Construct the full path where the map file will be saved
+    # NOW we use the LaunchConfiguration('map_save_dir') for the base path
     map_file_path = PathJoinSubstitution([
-        pkg_slambot_slam,
-        'maps',
+        LaunchConfiguration('map_save_dir'), # Using the new argument
         LaunchConfiguration('map_name')
     ])
+
 
     # --- Map Saver Node ---
     # This node runs the map_saver_cli tool from the nav2_map_server package
@@ -48,20 +65,37 @@ def generate_launch_description():
         executable='map_saver_cli',
         output='screen',
         arguments=[
+            '-t', '/map',
+            '-f', map_file_path
+        ],
+        parameters=[{'use_sim_time': True}], # Important for simulation environments
+        condition=IfCondition(PythonExpression(['not ', LaunchConfiguration('using_namespace')]))
+    )
+
+    save_map_node_namespaced = Node(
+        package='nav2_map_server',
+        executable='map_saver_cli',
+        output='screen',
+        arguments=[
             # Construct the namespaced topic, e.g., '/slambot/map'
             '-t', [LaunchConfiguration('robot_name'), '/map'],
             '-f', map_file_path
         ],
-        parameters=[{'use_sim_time': True}] # Important for simulation environments
+        parameters=[{'use_sim_time': True}], # Important for simulation environments
+        condition=IfCondition(PythonExpression([' ', LaunchConfiguration('using_namespace')]))
     )
+
 
     # --- Create Launch Description ---
     ld = LaunchDescription()
 
     # Add the declared arguments and the node to the launch description
+    ld.add_action(declare_save_dir_cmd)
     ld.add_action(declare_map_name_cmd)
     ld.add_action(declare_robot_name_cmd)
+    ld.add_action(declare_using_namespace_cmd)
     ld.add_action(save_map_node)
+    ld.add_action(save_map_node_namespaced)
 
     return ld
 

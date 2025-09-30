@@ -1,6 +1,17 @@
-# Slambot (Four-Wheeled Robot)
+# Slambot
 
-A ROS2 robot package with a slam-enabled diff-drive robot which launches into Gazebo and RVIZ and has a lidar and camera, and can be teleoperated. This robot is a four-wheeled robot and is more stable than the two-wheeled version. 
+A ROS2 package which includes...
+
+* A slam-enabled, Nav2 enabled, four-wheeled diff-drive robot. 
+* The robot has a lidar, camera, and imu sensor. 
+* Odometry is filtered via an ekf node and the robot_localization package. 
+* The robot can be teleoperated.
+* The robot can be launched into a slam_toolbox environment for creating maps
+* The robot can also be launched into a ros_cartographer environment for creating maps (which works better!)
+* The robot can then be launched into a Nav2 environment and will navigate to destinations sucessfully via RVIZ. 
+* The package is designed so that all functionalities can be used in a namespaced or non-namespaced environment depending on the user's desire.
+
+...Enjoy!
 
 ## Namespacing
 
@@ -18,14 +29,19 @@ or
 ros2 launch slambot_description rviz.launch.py using_namespace:=True
 
 # To launch Gazebo & RVIZ only
-ros2 launch slambot_bringup sim_no_slam.launch.py
+ros2 launch slambot_bringup sim_only.launch.py
 or
-ros2 launch slambot_bringup sim_no_slam.launch.py using_namespace:=True
+ros2 launch slambot_bringup sim_only.launch.py using_namespace:=True
 
-# To launch Gazebo, RVIZ and SLAM
-ros2 launch slambot_bringup sim_with_slam.launch.py
+# To launch Gazebo, RVIZ and slam_toolbox for mapping
+ros2 launch slambot_bringup sim_with_slamtoolbox.launch.py
 or
-ros2 launch slambot_bringup sim_with_slam.launch.py using_namespace:=True
+ros2 launch slambot_bringup sim_with_slamtoolbox.launch.py using_namespace:=True
+
+# To launch Gazebo, RVIZ and ros_cartographer for BETTER mapping
+ros2 launch slambot_bringup sim_with_slamtoolbox.launch.py
+or
+ros2 launch slambot_bringup sim_with_slamtoolbox.launch.py using_namespace:=True
 
 ```
 ## To Teleop
@@ -39,18 +55,20 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/sl
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
-## Saving Maps (When Using Slam)
+## Saving Maps (When Using SlamToolbox or Cartographer)
 
 If you've used slam and want to save the map use the in-built map saver node. Open a new terminal, source it correctly and enter:
 
 ```python
 
-ros2 launch slambot_slam map_saver.launch.py map_name:=my_maze_map  (or whatever you want to call it!)
+#If not namespacing...
+ros2 launch slambot_slam map_saver.launch.py map_name:=my_maze_map  #(or whatever you want to call it!)
 
+#If namespacing...
+ros2 launch slambot_slam map_saver.launch.py using_namespace:=True map_name:=my_maze_map  #(or whatever you want to call it!)
 ```
 
 After you run the command, you will see a confirmation in the terminal:
-* slambot_ws2/install/slambot_slam/share/slambot_slam/maps/my_maze_map.pgm
-* slambot_ws2/install/slambot_slam/share/slambot_slam/maps/my_maze_map.yaml
+* Saving map from '/map' topic to '/home/<your-username>/nav2_maps/my_maze_map' file
 
-Note... if you then want the maps in the /src directory, you need to copy them from the /share directory into it! Note that both the slambot_slam package, and the slambot_nav2 package have /maps directories. 
+Note... if you then want the maps in the /src directory, you need to copy them from the /nav2_maps directory in your home folder into it! 
