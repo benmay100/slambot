@@ -16,14 +16,17 @@
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
   <depend>builtin_interfaces</depend>
-  <depend>geometry_msgs</depend>
-  <depend>navigation2</depend>
-  <depend>nav2_bringup</depend>
-  <depend>nav2_simple_commander</depend>
-  <depend>slam_toolbox</depend>
   <depend>std_msgs</depend>
+  
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+
+  <depend>geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tf_transformations</depend>
+  
+  <depend>cartographer_ros</depend> 
+  <depend>slam_toolbox</depend>
   
   <export>
     <build_type>ament_cmake</build_type>
