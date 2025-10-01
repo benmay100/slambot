@@ -13,7 +13,7 @@ def generate_launch_description():
     slambot_navigation_dir = get_package_share_directory('slambot_nav2')
     
     # 2. File paths
-    map_file_path = os.path.join(slambot_navigation_dir, 'maps', 'my_maze_map_1.yaml')
+    map_file_path = os.path.join(slambot_navigation_dir, 'maps', 'indoor_map_cartographed.yaml')
     params_file_path = os.path.join(slambot_navigation_dir, 'config', 'nav2_custom_params.yaml')
 
 

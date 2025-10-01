@@ -73,7 +73,7 @@ def generate_launch_description():
     
     declare_map_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(pkg_slambot_slam, 'maps', 'my_maze_map_1.yaml'),
+        default_value=os.path.join(pkg_slambot_slam, 'maps', 'indoor_map_cartographed.yaml'),
         description='Full path to the map file to load for navigation'
     )
 
