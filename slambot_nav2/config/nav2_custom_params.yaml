@@ -1,3 +1,7 @@
+# This file was taken as a base from the Nav2 Tutorials Github Package
+# It was then customised taking guidance from https://automaticaddison.com/ros-2-navigation-tuning-guide-nav2/#amcl
+# It was then further customised based on this specific robot's behaviour in this specific environment
+
 amcl:
   ros__parameters:
     alpha1: 0.2
@@ -30,8 +34,8 @@ amcl:
     sigma_hit: 0.2
     tf_broadcast: true
     transform_tolerance: 0.5 
-    update_min_a: 0.2
-    update_min_d: 0.25
+    update_min_a: 0.05 #Changed from 0.2
+    update_min_d: 0.05 #Changed from 0.25
     z_hit: 0.5
     z_max: 0.05
     z_rand: 0.5
@@ -51,6 +55,7 @@ bt_navigator:
   ros__parameters:
     global_frame: map
     robot_base_frame: "base_footprint"
+    odom_topic: "/odometry/filtered" #We're using ekf node, so use filtered data!
     transform_tolerance: 0.5 
     filter_duration: 0.3 
     default_nav_to_pose_bt_xml: "$(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml" #Added
@@ -154,7 +159,7 @@ controller_server:
       vy_std: 0.2
       wz_std: 0.4
       vx_max: 0.5
-      vx_min: -0.35
+      vx_min: 0.0 #Was -0.35, setting to 0.0 prevent the robot reversing (which often causes issues)
       vy_max: 0.5
       wz_max: 1.9
       iteration_count: 1
@@ -230,8 +235,8 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 10.0 #Upped to 10hz
-      publish_frequency: 2.0
+      update_frequency: 5.0
+      publish_frequency: 5.0 #Upped from 2.0 to 5.0hz
       global_frame: odom
       robot_base_frame: "base_footprint"  #robot_base_frame: "base_link" -- for slambot we use base_footprint, not base_link as most senior parent in our TF tree
       rolling_window: true
@@ -284,8 +289,8 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
+      update_frequency: 5.0 #Changed from 1.0 to 5.0
+      publish_frequency: 5.0 #Changed from 1.0 to 5.0
       global_frame: map
       robot_base_frame: "base_footprint"
       #This polygon represents a 0.19m long by 0.12m wide rectangle, centered at base_footprint
@@ -391,7 +396,7 @@ velocity_smoother:
     min_velocity: [-0.5, 0.0, -2.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
-    odom_topic: "odom" #Changed from /odom as we're using an ekf node, so may as well latch to the filtered odometry
+    odom_topic: "odometry/filtered" #Changed from /odom as we're using an ekf node, so may as well latch to the filtered odometry
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
