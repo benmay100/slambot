@@ -2,6 +2,8 @@
 
 """
 Reads QR codes and stores the robots position (X,Y and Yaw) values along with the QRcode string
+When program is killed, it saves a file 'qr_code_coordinates.json' into your home directory
+This can then be copied into the ROS package for use in automatic waypoint following (e.g. in the slambot_nav2_controller.py node)
 
 """
 # dependencies 
@@ -17,6 +19,7 @@ from tf2_ros import TransformException, Buffer, TransformListener
 from tf_transformations import euler_from_quaternion # Helper for converting quaternion to yaw
 import os
 import json # Using JSON for file storage is often better than plain TXT
+from rclpy.time import Time
 
 
 class QrCodeReader(Node):
@@ -82,7 +85,7 @@ class QrCodeReader(Node):
         # 4. Calculate the average distance
         if valid_readings.size > 0:
             self.average_front_distance = np.mean(valid_readings)
-            self.get_logger().info(  #Note will only print to console if changed to self.get_logger().info()
+            self.get_logger().debug(  #Note will only print to console if changed to self.get_logger().info()
                 f"Average front distance (20 deg): {self.average_front_distance:.3f}m "
                 f"from {valid_readings.size} valid points."
             )
@@ -122,13 +125,18 @@ class QrCodeReader(Node):
 
 
     def get_pose_and_save(self, timestamp, qr_data):
+        # We ignore the exact 'timestamp' from the message header and instead
+        # request the latest available transform (Time(seconds=0, nanoseconds=0))
+        # because of typical sim-time/tf latency issues.
+        latest_time = Time().to_msg() 
+
         try:
             # 1. Look up the transform (map -> base_link) at the exact time the image was captured
             t = self.tf_buffer.lookup_transform(
                 self.map_frame, 
                 self.robot_frame, 
-                timestamp, 
-                timeout=rclpy.duration.Duration(seconds=0.1) # Max wait time
+                latest_time,
+                timeout=rclpy.duration.Duration(seconds=0.5) # Max wait time
             )
         except TransformException as ex:
             self.get_logger().error(f'Could not transform {self.robot_frame} to {self.map_frame}: {ex}')

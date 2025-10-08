@@ -10,6 +10,9 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        # --- NEW ENTRY for the JSON file ---
+        # The installation path: 'share/slambot_controllers/data'
+        ('share/' + package_name + '/data', ['data/qr_codes_coordinates.json']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
