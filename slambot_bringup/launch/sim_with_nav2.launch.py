@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 """
 Top-level launch file to start the Gazebo and RVIZ with Nav2.
-
-This launch file acts as an entry point and includes the main gazebo.launch.py, rviz.launch.py files, and nav2.launch.py files from the slambot_gazebo, slambot_description packages and slambot_navigation packages.
-
-You can launch with or without a namespaced environment, but MUST not use localization in order for Nav2 to work properly.
-
+This only currently works using a NON namespaced environment
+Work is under way to try and get it working with namespaced environment too
 
 """
 

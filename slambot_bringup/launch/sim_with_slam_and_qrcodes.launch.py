@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 """
-Top-level launch file to start the Gazebo and RVIZ with SLAM.
-
-This launch file acts as an entry point and includes the main gazebo.launch.py, rviz.launch.py files, and slam.launch.py files from the slambot_gazebo, slambot_description packages and slambot_slam packages.
-
-You can launch with or without a namespaced environment, but MUST use localization in order for slam_toolbox to work properly.
+Top-level launch file to start the Gazebo and RVIZ with SLAM (you can choose between 'cartographer' and 'slam_toolbox')
+Importantly, this launch file also runs the 'qr_code_reader' node from the 'slambot_controllers' package
+As this is designed for launching into an environment with QR codes dotted around, so you can map your environment AND...
+...stop at each QR code to automatically get the coordinates and robot position for use in a later Nav2 automated program 
 
 """
 
 import os
-
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
+from launch_ros.actions import Node 
 
 def generate_launch_description():
 
@@ -28,7 +27,7 @@ def generate_launch_description():
     # ========================= Declare Launch Arguments =========================== #   
     declare_world_cmd = DeclareLaunchArgument(
         'world',
-        default_value='indoor_world_1.sdf',
+        default_value='indoor_world_with_qr_codes.sdf',
         description='The world file to launch in Gazebo'
     )
 
@@ -68,7 +67,13 @@ def generate_launch_description():
         default_value='True', #Do not change to false, or SLAM won't work
         description='A "True" value is required when using slam or you wont get accurate map'
     )
-
+    
+    # This argument allows us to specify the SLAM params file from the command line
+    declare_slam_params_file_cmd = DeclareLaunchArgument(
+        'slam_params_file',
+        default_value=os.path.join(pkg_slambot_slam, 'config', 'slam_params.yaml'),
+        description='Full path to the ROS2 parameters file for SLAM'
+    )
 
     declare_ros_gz_bridge_file_cmd = DeclareLaunchArgument(
         'ros_gz_bridge_file',
@@ -76,6 +81,56 @@ def generate_launch_description():
         description='Full path to the ros_gz_bridge (with localization) file'
     ) 
 
+    declare_slam_type_cmd = DeclareLaunchArgument(
+        'slam_type', 
+        default_value='cartographer', #or can put 'slamtoolbox'
+        description='Launches the version of slam you want to use'
+    )
+
+    # =============================================================================== # 
+
+
+    # ========================= Dynamic File Path Changes (RVIZ) ========================== #   
+
+    # Path to the RVIZ configuration file (depending on if 'using_namespace') and if using 'slam_toolbox' or 'cartographer_ros'
+    rviz_config_path_slamtoolbox = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_slamtoolbox_config.rviz')
+    rviz_config_path_slamtoolbox_namespaced = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_slamtoolbox_config_namespaced.rviz')
+    rviz_config_path_cartographer = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_cartographer_config.rviz')
+    rviz_config_path_cartographer_namespaced = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_cartographer_config_namespaced.rviz')
+
+
+    declare_rviz_config_file_cmd = DeclareLaunchArgument(
+        'rviz_config_file',
+        default_value=PythonExpression([
+            # Check 1: If slam_type is 'cartographer'
+            "'", rviz_config_path_cartographer_namespaced, "' if '",
+            LaunchConfiguration('slam_type'),
+            "'.lower() == 'cartographer' and '",
+            LaunchConfiguration('using_namespace'),
+            "'.lower() == 'true' else '",
+
+            # Check 2: If slam_type is 'cartographer' (and namespaced is false)
+            rviz_config_path_cartographer, "' if '",
+            LaunchConfiguration('slam_type'),
+            "'.lower() == 'cartographer' else '",
+            
+            # Check 3: If slam_type is 'slamtoolbox' and namespaced is true
+            rviz_config_path_slamtoolbox_namespaced, "' if '",
+            LaunchConfiguration('slam_type'),
+            "'.lower() == 'slamtoolbox' and '",
+            LaunchConfiguration('using_namespace'),
+            "'.lower() == 'true' else '",
+
+            # Check 4: If slam_type is 'slamtoolbox' (and namespaced is false) - This is the final 'else'
+            rviz_config_path_slamtoolbox, "'"
+        ]),
+        description='Full path to the RViz config file. Automatically selects based on slam_type and using_namespace.'
+    )
+
+
+    # ================================================================================== # 
+    
+    # ======================= Cartographer File Path Setup ==============================#   
 
     cartographer_config_dir = LaunchConfiguration('cartographer_config_dir', default=os.path.join(pkg_slambot_slam, 'config'))
     configuration_basename = LaunchConfiguration('configuration_basename', default='cartographer_params.lua')
@@ -96,27 +151,7 @@ def generate_launch_description():
         description='Full path to the .lua configuration file for Cartographer'
     )
 
-    # =============================================================================== # 
-
-
-    # ========================= Dynamic File Path Changes ========================== #   
-
-    # Path to the RViz configuration file (depending on if 'using_namespace')
-    rviz_config_path = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_and_cartographer_config.rviz')
-    rviz_config_path_namespaced = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_and_cartographer_config_namespaced.rviz')
-
-
-    declare_rviz_config_file_cmd = DeclareLaunchArgument(
-        'rviz_config_file',
-        default_value=PythonExpression([
-            "'", rviz_config_path_namespaced, "' if '",
-            LaunchConfiguration('using_namespace'),
-            "'.lower() == 'true' else '", rviz_config_path, "'"
-        ]),
-        description='Full path to the RViz config file. Automatically selects namespaced version if using_namespace=True.'
-    )
-
-    # ================================================================================== #   
+    # ================================================================================== #
 
     # =========== Launch RVIZ and Robot State Publisher From rviz.launch.py ============ # 
     
@@ -135,6 +170,7 @@ def generate_launch_description():
     )
 
     # ================================================================================ # 
+    
     
     # =================== Launch Gazebo From gazebo.launch.py ========================= # 
 
@@ -156,7 +192,43 @@ def generate_launch_description():
 
     # ================================================================================ # 
 
-    # ======================= Start Cartographer - Using Slam Launch File ==================== #
+    # ============== Start slamtoolbox (only if selected as argument) ================= #
+
+    # 1. If NOT using namespacing...
+    start_slam_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_slambot_slam, 'launch', 'slam.launch.py')
+        ),
+        launch_arguments={
+            'world': LaunchConfiguration('world'),
+            'robot_name': LaunchConfiguration('robot_name'),
+        }.items(),
+        #Below tells this NOT to launch if 'using_namespace' set to True
+        condition=IfCondition(PythonExpression([
+            "'", LaunchConfiguration('slam_type'), "'.lower() == 'slamtoolbox' and '",
+            LaunchConfiguration('using_namespace'), "'.lower() != 'true'"
+        ]))
+    )
+
+    # 1. If using namespacing...
+    start_slam_cmd_namespaced = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_slambot_slam, 'launch', 'slam_namespaced.launch.py')
+        ),
+        launch_arguments={
+            'world': LaunchConfiguration('world'),
+            'robot_name': LaunchConfiguration('robot_name'),
+        }.items(),
+        #Below tells this NOT to launch if 'using_namespace' set to False
+        condition=IfCondition(PythonExpression([
+            "'", LaunchConfiguration('slam_type'), "'.lower() == 'slamtoolbox' and '",
+            LaunchConfiguration('using_namespace'), "'.lower() == 'true'"
+        ]))
+    )
+    
+    # ================================================================================ # 
+
+    # ============== Start cartographer (the default argument) ================= #
 
     start_cartographer_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -168,10 +240,36 @@ def generate_launch_description():
             'configuration_directory': LaunchConfiguration('configuration_directory'), 
             'using_namespace': LaunchConfiguration('using_namespace'),
             'use_sim_time': LaunchConfiguration('use_sim_time')
-        }.items()
+        }.items(),
+        condition=IfCondition(PythonExpression([
+            "'", LaunchConfiguration('slam_type'), "'.lower() == 'cartographer'"
+        ]))
+    )
+    
+    # ================================================================================ # 
+
+    # =========== Run the 'qr_code_reader.py' node (in 'slam_controllers') ============ #
+
+    start_qr_reader_cmd = Node(
+        condition=UnlessCondition(LaunchConfiguration('using_namespace')),
+        package='slambot_controllers',
+        executable='qr_code_reader', 
+        name='qr_code_mazer_driver',
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+        output='screen'
     )
 
-    # ================================================================================ # 
+    start_qr_reader_cmd_namespaced = Node(
+        condition=IfCondition(LaunchConfiguration('using_namespace')),
+        package='slambot_controllers',
+        executable='qr_code_reader', 
+        name='qr_code_mazer_driver',
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+        namespace=LaunchConfiguration('robot_name'),        
+        output='screen'
+    )
+
+    # ================================================================================ #
 
     # ========================= Create Launch Description ============================ # 
     
@@ -185,15 +283,20 @@ def generate_launch_description():
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_jsp_gui_cmd)
     ld.add_action(declare_using_localization_cmd)
+    ld.add_action(declare_slam_params_file_cmd)
+    ld.add_action(declare_ros_gz_bridge_file_cmd)
+    ld.add_action(declare_slam_type_cmd)
     ld.add_action(declare_configuration_directory_cmd)
     ld.add_action(declare_cartographer_config_file_cmd)
-    ld.add_action(declare_ros_gz_bridge_file_cmd)
     #Dynamic file changes here
     ld.add_action(declare_rviz_config_file_cmd)
-
+    
     ld.add_action(start_rviz_cmd)
     ld.add_action(start_gz_cmd)
+    ld.add_action(start_slam_cmd)
+    ld.add_action(start_slam_cmd_namespaced)
     ld.add_action(start_cartographer_cmd)
-    
+    ld.add_action(start_qr_reader_cmd)
+    ld.add_action(start_qr_reader_cmd_namespaced)
 
     return ld

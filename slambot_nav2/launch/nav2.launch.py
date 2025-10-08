@@ -15,6 +15,7 @@ def generate_launch_description():
     # 2. File paths
     map_file_path = os.path.join(slambot_navigation_dir, 'maps', 'indoor_map_cartographed.yaml')
     params_file_path = os.path.join(slambot_navigation_dir, 'config', 'nav2_custom_params.yaml')
+    params_file_path_namespaced = os.path.join(slambot_navigation_dir, 'config', 'nav2_custom_params_namespaced.yaml')
 
 
     # 3. Declare the launch arguments
@@ -29,10 +30,10 @@ def generate_launch_description():
         default_value=map_file_path,
         description='Full path to the map file to load')
 
-    declare_params_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value=params_file_path,
-        description='Full path to the Nav2 parameters file')
+    # declare_params_cmd = DeclareLaunchArgument(
+    #     'params_file',
+    #     default_value=params_file_path,
+    #     description='Full path to the Nav2 parameters file')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -45,6 +46,18 @@ def generate_launch_description():
         default_value='False',
         description='Namespaces all topics (best for multiple robot setups) if set to true'
     )
+
+    # Dynamic change of params file depending on if using namespace
+    declare_params_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=PythonExpression([
+            "'", params_file_path_namespaced, "' if '",
+            LaunchConfiguration('using_namespace'),
+            "'.lower() == 'true' else '", params_file_path, "'"
+        ]),
+        description='Full path to the Nav2 parameters file'
+    )
+    
 
 
     # ============== Nav2 Launch  =======================#
@@ -78,6 +91,7 @@ def generate_launch_description():
         }.items(),
         condition=IfCondition(PythonExpression([' ', LaunchConfiguration('using_namespace')]))
     )
+
 
     # --- Create Launch Description ---
     ld = LaunchDescription()

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Top-level launch file to start the Gazebo and RVIZ without SLAM.
-
+Top-level launch file to start the Gazebo and RVIZ without any SLAM or Nav2 functionality.
 This launch file acts as an entry point and includes the main gazebo.launch.py and rviz.launch.py files, from the slambot_gazebo and slambot_description packages.
-
-You can launch with or without a namespaced environment, and with or without using localization (i.e. ekf node for filtered odometry readings)
+By default it launches an ekf node using 'robot_localization' package, but you can choose to not do ekf filtering via the launch arguments
+You can launch with or without a namespaced environment
 
 """
 
@@ -27,7 +26,7 @@ def generate_launch_description():
     # ========================= Declare Launch Arguments =========================== #   
     declare_world_cmd = DeclareLaunchArgument(
         'world',
-        default_value='indoor_world_1.sdf',
+        default_value='indoor_world_with_qr_codes.sdf',
         description='The world file to launch in Gazebo'
     )
 
