@@ -27,7 +27,7 @@ def generate_launch_description():
     # ========================= Declare Launch Arguments =========================== #   
     declare_world_cmd = DeclareLaunchArgument(
         'world',
-        default_value='indoor_world_1.sdf',
+        default_value='indoor_world_with_qr_codes.sdf',
         description='The world file to launch in Gazebo'
     )
 

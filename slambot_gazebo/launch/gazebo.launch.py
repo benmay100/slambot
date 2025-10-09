@@ -32,7 +32,7 @@ def generate_launch_description():
     # World to launch in Gazebo
     declare_world_cmd = DeclareLaunchArgument(
         'world',
-        default_value='indoor_world_1.sdf',
+        default_value='indoor_world_with_qr_codes.sdf',
         description='The world file to launch in Gazebo')
 
     # Robot's name and namespace
@@ -185,8 +185,8 @@ def generate_launch_description():
         executable='create',
         arguments=[
             '-name', LaunchConfiguration('robot_name'),
-            '-x', '0.0',
-            '-y', '0.0',
+            '-x', '-6.0',
+            '-y', '-2.0',
             '-z', '0.2',
             '-topic', 'robot_description' 
         ],
@@ -199,8 +199,8 @@ def generate_launch_description():
         executable='create',
         arguments=[
             '-name', LaunchConfiguration('robot_name'),
-            '-x', '0.0',
-            '-y', '0.0',
+            '-x', '-6.0',
+            '-y', '-2.0',
             '-z', '0.2',
             '-topic', [LaunchConfiguration('robot_name'), '/robot_description']
         ],

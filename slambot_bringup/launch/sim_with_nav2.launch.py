@@ -27,7 +27,7 @@ def generate_launch_description():
     # ========================= Declare Launch Arguments =========================== #   
     declare_world_cmd = DeclareLaunchArgument(
         'world',
-        default_value='indoor_world_1.sdf',
+        default_value='indoor_world_with_qr_codes.sdf',
         description='The world file to launch in Gazebo'
     )
 
@@ -70,7 +70,7 @@ def generate_launch_description():
     
     declare_map_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(pkg_slambot_slam, 'maps', 'indoor_map_cartographed.yaml'),
+        default_value=os.path.join(pkg_slambot_slam, 'maps', 'indoor_map_cartographer.yaml'),
         description='Full path to the map file to load for navigation'
     )
 

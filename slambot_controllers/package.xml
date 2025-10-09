@@ -5,7 +5,9 @@
   <version>0.0.0</version>
   <description>ROS 2 Python controllers for QR code reading and waypoint logging during SLAM.</description>
   <maintainer email="benalexandermay@gmail.com">ben-may</maintainer>
-  <license>Apache-2.0</license> <depend>rclpy</depend>
+  <license>Apache-2.0</license> 
+  
+  <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>tf2_ros</depend>

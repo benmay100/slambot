@@ -42,7 +42,7 @@ amcl:
     z_short: 0.05
     scan_topic: scan
     map_topic: map
-    set_initial_pose: true 
+    set_initial_pose: false 
     always_reset_initial_pose: false
     first_map_only: false
     initial_pose:

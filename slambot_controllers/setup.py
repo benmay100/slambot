@@ -28,7 +28,7 @@ setup(
     entry_points={
         'console_scripts': [
             'qr_code_reader = slambot_controllers.qr_code_reader:main',
-            'slambot_nav2_controller = slambot_controllers.slambot_nav2_controller:main'
+            'qr_code_waypoint_follower = slambot_controllers.qr_code_waypoint_follower:main'
         ],
     },
 )
