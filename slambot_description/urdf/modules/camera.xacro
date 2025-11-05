@@ -2,40 +2,41 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+
   <!-- Link camera_link -->
   <link name="camera_link">
     <inertial>
-      <origin xyz="1.31869e-19 -1.51987e-19 -0.00371932" rpy="0 0 0"/>
-      <mass value="0.000522865"/>
-      <inertia ixx="4.84738e-09" ixy="0" ixz="0" iyy="4.84738e-09" iyz="0" izz="4.86692e-09"/>
+      <origin xyz="5.37582e-18 -7.20266e-19 -0.0175" rpy="0 0 0"/>
+      <mass value="0.0229688"/>
+      <inertia ixx="4.68945e-06" ixy="0" ixz="0" iyy="2.77539e-06" iyz="0" izz="2.77539e-06"/>
     </inertial>
     <!-- Part camera_link -->
     <visual>
-      <origin xyz="0 3.85494e-19 0" rpy="3.14159 -0 0"/>
+      <origin xyz="6.45358e-18 0 -0.0175" rpy="3.14159 -0 0"/>
       <geometry>
         <mesh filename="package://slambot_description/assets/camera_link.stl"/>
       </geometry>
       <material name="camera_link_material">
-        <color rgba="0.980392 0.713725 0.00392157 1"/>
+        <color rgba="0.972549 0.529412 0.00392157 1"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="0 3.85494e-19 0" rpy="3.14159 -0 0"/>
+      <origin xyz="6.45358e-18 0 -0.0175" rpy="3.14159 -0 0"/>
       <geometry>
         <mesh filename="package://slambot_description/assets/camera_link.stl"/>
       </geometry>
     </collision>
   </link>
   <!-- Joint from base_link to camera_link -->
-  <joint name="camera_joint" type="fixed">
-    <origin xyz="0.0811976 3.85494e-19 0.057" rpy="0 -0 0"/>
+  <joint name="camera" type="fixed">
+    <origin xyz="0.083 -2.43306e-17 0.095" rpy="0 -0 0"/>
     <parent link="base_link"/>
     <child link="camera_link"/>
     <axis xyz="0 0 1"/>
     <limit effort="100" velocity="100"/>
   </joint>
 
-    <!--THIS IS A FIX TO CHANGE THE ORIENTATION SO IT WORKS WITH OPENCV (ALWAYS INCLUDE)
+<!--THIS IS A FIX TO CHANGE THE ORIENTATION SO IT WORKS WITH OPENCV (ALWAYS INCLUDE)
   generate an optical frame 
   http://www.ros.org/reps/rep-0103.html#suffix-frames
   so that ros and opencv can operate on the camera frame correctly -->
@@ -52,7 +53,4 @@
   </joint>
 
 
-
 </robot>
-
-

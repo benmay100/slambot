@@ -5,35 +5,35 @@
   <!-- Link lidar_link -->
   <link name="lidar_link">
     <inertial>
-      <origin xyz="-1.11789e-18 1.22638e-20 -0.00745144" rpy="0 0 0"/>
-      <mass value="0.0267087"/>
-      <inertia ixx="4.66132e-06" ixy="0" ixz="0" iyy="4.66132e-06" iyz="0" izz="8.33295e-06"/>
+      <origin xyz="-1.06386e-18 5.77779e-34 -0.0125" rpy="0 0 0"/>
+      <mass value="0.041469"/>
+      <inertia ixx="6.30675e-06" ixy="0" ixz="0" iyy="6.30675e-06" iyz="0" izz="8.2938e-06"/>
     </inertial>
     <!-- Part lidar_link -->
     <visual>
-      <origin xyz="0 1.53081e-18 0" rpy="3.14159 -0 0"/>
+      <origin xyz="0 1.22465e-18 0" rpy="3.14159 -0 0"/>
       <geometry>
         <mesh filename="package://slambot_description/assets/lidar_link.stl"/>
       </geometry>
       <material name="lidar_link_material">
-        <color rgba="0.301961 0.301961 0.301961 1"/>
+        <color rgba="0 0 0 1"/>
       </material>
     </visual>
     <collision>
-      <origin xyz="0 1.53081e-18 0" rpy="3.14159 -0 0"/>
+      <origin xyz="0 1.22465e-18 0" rpy="3.14159 -0 0"/>
       <geometry>
         <mesh filename="package://slambot_description/assets/lidar_link.stl"/>
       </geometry>
     </collision>
   </link>
   <!-- Joint from base_link to lidar_link -->
-  <joint name="lidar_joint" type="fixed">
-    <!--<origin xyz="-0.0440219 2.92864e-17 0.09" rpy="3.14159 -0 0"/>--> <!--Changed because lidar z-axis was actually pointing DOWN!-->
-    <origin xyz="-0.0440219 2.92864e-17 0.105" rpy="0 -0 0"/>
+  <joint name="lidar" type="fixed">
+    <!--<origin xyz="-0.050039 8.16354e-18 0.105" rpy="3.14159 -0 0"/>-->
+    <origin xyz="-0.050039 8.16354e-18 0.13" rpy="0 -0 0"/>  <!-- If z-axis pointing down, use this instead-->
     <parent link="base_link"/>
     <child link="lidar_link"/>
     <axis xyz="0 0 1"/>
     <limit effort="100" velocity="100"/>
   </joint>
-  
+
 </robot>
