@@ -1,0 +1,31 @@
+twist_mux:
+  ros__parameters:
+    # Tell twist_mux that its inputs are non-stamped Twist messages
+    use_stamped: false
+    # This is the final, limited command that the twist_stamper (which then outputs stamped Twist messages) will listen to.
+    cmd_vel_out: "/cmd_vel"
+
+    # Note: twist_mux handles topic prioritization only
+    # Velocity limiting is handled by diff_drive_controller
+
+    # --- Input Topics ---
+    # List of all cmd_vel sources, highest priority first.
+    topics:
+      # 1. Joystick (Highest Priority)
+      joystick:
+        topic   : "cmd_vel_joy"
+        timeout : 0.5
+        priority: 110
+      
+      # 2. Keyboard (Second Highest Priority)
+      keyboard:
+        topic   : "cmd_vel_key"
+        timeout : 0.5
+        priority: 100
+
+      # 3. Navigation (Lowest Priority)
+      navigation:
+        # Nav2's default output topic is /cmd_vel_nav
+        topic   : "cmd_vel_nav" 
+        timeout : 0.5
+        priority: 10

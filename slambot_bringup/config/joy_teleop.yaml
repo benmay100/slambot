@@ -1,0 +1,32 @@
+teleop_twist_joy_node:
+  ros__parameters:
+    # --- Enable Button ---
+    require_enable_button: false
+    enable_button: 4 
+
+    # --- Axis Mappings (for F710 in D-Input mode) ---
+    axis_linear:
+      x: 1  # Left Stick (Vertical)
+    
+    # *** THIS IS THE FIX ***
+    axis_angular:
+      yaw: 2  # Right Stick (Horizontal)
+
+# --- Scaling ---
+    scale_linear:
+      x: 0.2  # Gives 5.88 rad/s for "Forward Only" (equal to 0.2 m/s)
+    
+    scale_angular:
+      yaw: 0.88  # Tuned for 0.2 m/s forward limit (~2.5 rad/s inner wheel)
+
+
+
+# The above scales give the following on /wheel_commands
+# Forward Only: 5.88 rad/s on all wheels
+# Backward Only: -5.88 rad/s on all wheels
+# Turn in Place Right: 2.5 rad/s on left wheels, -2.5 rad/s on right wheels
+# Turn in Place Left: -2.5 rad/s on left wheels, 2.5 rad/s on right wheels
+# Forward + Turn Right: 8.44 rad/s on left wheels (clamped to 5.89 by the driver), 3.32 rad/s on right wheels
+# Forward + Turn Left: 8.44 rad/s on right wheels (clamped to 5.89 by the driver), 3.32 rad/s on left wheels
+# Backward + Turn Right: -8.44 rad/s on right wheels (clamped to -5.89 by the driver), -3.32 rad/s on left wheels
+# Backward + Turn Left: -8.44 rad/s on left wheels (clamped to -5.89 by the driver), -3.32 rad/s on right wheels

@@ -29,9 +29,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 -0 0"/>
+      <origin xyz="0 0 0.051" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://slambot_description/assets/base_link.stl"/>
+        <box size="0.216 0.156 0.108"/>
       </geometry>
     </collision>
   </link>
@@ -54,9 +54,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.032" rpy="-1.5708 -0 0"/>
+      <origin xyz="0 0 0.0185" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://slambot_description/assets/wheel_link.stl"/>
+        <cylinder radius="0.034" length="0.027" />
       </geometry>
     </collision>
   </link>
@@ -87,9 +87,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.032" rpy="1.5708 -0 0"/>
+      <origin xyz="0 0 -0.0185" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://slambot_description/assets/wheel_link.stl"/>
+        <cylinder radius="0.034" length="0.027" />
       </geometry>
     </collision>
   </link>
@@ -120,9 +120,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 -0.032" rpy="1.5708 -0 0"/>
+      <origin xyz="0 0 -0.0185" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://slambot_description/assets/wheel_link.stl"/>
+        <cylinder radius="0.034" length="0.027" />
       </geometry>
     </collision>
   </link>
@@ -153,9 +153,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.032" rpy="-1.5708 -0 0"/>
+      <origin xyz="0 0 0.0185" rpy="0 -0 0"/>
       <geometry>
-        <mesh filename="package://slambot_description/assets/wheel_link.stl"/>
+        <cylinder radius="0.034" length="0.027" />
       </geometry>
     </collision>
   </link>

@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+ <!-- IMU Sensor Link -->
+  <link name="imu_link"/>
+
+  <!-- Joint to connect IMU to the base link -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <!-- The below is the IMU's actual physical location on the real robot relative to the origin of the base -->
+    <!-- Yaw is +1.570... because the IMU is rotated 90 degrees counter-clockwise (X points left) -->
+    <origin xyz="0 0 0.047" rpy="0 0 1.57079632679"/>
+  </joint>
+
+
+</robot>

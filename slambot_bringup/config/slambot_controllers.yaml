@@ -1,0 +1,57 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 30
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+    imu_sensor_broadcaster:
+      type: imu_sensor_broadcaster/IMUSensorBroadcaster
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names: ["front_left_wheel_joint", "rear_left_wheel_joint"]
+    right_wheel_names: ["front_right_wheel_joint", "rear_right_wheel_joint"]
+    wheel_separation: 0.198
+    wheel_radius: 0.034
+
+    # --- CMD_VEL SETTINGS ---
+    use_stamped_vel: true
+    cmd_vel_timeout: 0.5 # Keep the watchdog
+    # -----------------------
+
+    # --- SPEED LIMITS ---
+    # These enforce your robot's physical hardware limits
+    linear:
+      x:
+        has_velocity_limits: true
+        max_velocity: 0.2  # 5.88 rad/s * 0.034m wheel radius = 0.2 m/s
+        min_velocity: -0.2
+        has_acceleration_limits: false
+        max_acceleration: 1.0
+        min_acceleration: -1.0
+      y:
+        has_velocity_limits: false
+        max_velocity: 0.0
+        min_velocity: 0.0
+        has_acceleration_limits: false
+        max_acceleration: 0.0
+        min_acceleration: 0.0
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 2.02  # Your max turn speed - calculated by angular.z.max_velocity: 0.15 ms / (0.198 wheel_sep / 2) = 1.515... rad/s
+        min_velocity: -2.02
+        has_acceleration_limits: false
+        max_acceleration: 3.2
+        min_acceleration: -3.2
+
+    publish_rate: 30.0
+    base_frame_id: base_footprint
+    odom_frame_id: odom
+    enable_odom_tf: true
+
+imu_sensor_broadcaster:
+  ros__parameters:
+    sensor_name: imu_sensor
+    frame_id: imu_link

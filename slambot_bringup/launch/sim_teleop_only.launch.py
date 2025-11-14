@@ -14,6 +14,11 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch_ros.actions import Node
+from launch.conditions import IfCondition, UnlessCondition
+
+
+
 
 def generate_launch_description():
     """Generate the launch description for the simulation without SLAM."""
@@ -21,6 +26,14 @@ def generate_launch_description():
     # Get the path to the slambot_gazebo package
     pkg_slambot_gazebo = get_package_share_directory('slambot_gazebo')
     pkg_slambot_description = get_package_share_directory('slambot_description')
+    pkg_slambot_bringup = get_package_share_directory('slambot_bringup')
+
+    # Define Config File Paths
+    # Path to the new twist_mux config
+    twist_mux_file = os.path.join(pkg_slambot_bringup, 'config', 'twist_mux.yaml')
+    
+    # Path for the joystick config
+    joy_config_file = os.path.join(pkg_slambot_bringup, 'config', 'joy_teleop.yaml')
 
 
     # ========================= Declare Launch Arguments =========================== #   
@@ -66,6 +79,13 @@ def generate_launch_description():
         default_value='True',
         description='uses the "ros_gz_bridge_localization.yaml" file if true'
     )
+
+    declare_using_joy_cmd = DeclareLaunchArgument(
+        'using_joy',
+        default_value='True',
+        description='launches the joystick teleop nodes if true. If you do not have a joystick/controller set to false or will crash on launch.'
+    )
+
 
     # =============================================================================== # 
 
@@ -162,6 +182,39 @@ def generate_launch_description():
 
     # ================================================================================ # 
 
+    # =================== Launch Twist Mux and Teleop Nodes Here =================== #
+
+    twist_mux_node = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        parameters=[twist_mux_file],
+        remappings=[("cmd_vel_out", "/cmd_vel")] 
+    )
+
+    # Start the 'joy' driver node, *if* using_joy is true
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        parameters=[{'dev': '/dev/input/js0'}],
+        condition=IfCondition(LaunchConfiguration('using_joy'))
+    )
+
+    # Start the 'teleop_twist_joy' node, *if* using_joy is true
+    teleop_twist_joy_node = Node(
+        package='teleop_twist_joy',
+        executable='teleop_node',
+        name='teleop_twist_joy_node',
+        parameters=[joy_config_file],
+        remappings=[
+            # Remap the output to the topic twist_mux is listening for
+            ('cmd_vel', '/cmd_vel_joy') 
+        ],
+        condition=IfCondition(LaunchConfiguration('using_joy'))
+    )
+
+    # =================================================================================#
+
 
     # ========================= Create Launch Description ============================ # 
     ld = LaunchDescription()
@@ -174,11 +227,16 @@ def generate_launch_description():
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_jsp_gui_cmd)
     ld.add_action(declare_using_localization_cmd)
+    ld.add_action(declare_using_joy_cmd)
+
     #Dynamic file changes here
     ld.add_action(declare_rviz_config_file_cmd)
     ld.add_action(declare_ros_gz_bridge_file_cmd)
     
     ld.add_action(start_rviz_cmd)
     ld.add_action(start_gz_cmd)
+    ld.add_action(twist_mux_node)
+    ld.add_action(joy_node)
+    ld.add_action(teleop_twist_joy_node)
 
     return ld

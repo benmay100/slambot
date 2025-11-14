@@ -3,12 +3,38 @@
 <!-- Onshape document_id: c4aa493c9127ef72e4e641df -->
 <robot name="{robot_name}" xmlns:xacro="http://www.ros.org/wiki/xacro">
   
+    <xacro:arg name="using_sim" default="true" />
+
     <xacro:include filename="xacro_properties/xacro_properties.xacro" />
     <xacro:include filename="modules/chassis_and_wheels.xacro" />
     <xacro:include filename="modules/camera.xacro" />
     <xacro:include filename="modules/lidar.xacro" />
-    <xacro:include filename="modules/imu.xacro" />
-    <xacro:include filename="gazebo/gazebo_plugins.xacro" />
-    <xacro:include filename="gazebo/gazebo_properties.xacro" />
+
+    <xacro:if value="$(arg using_sim)">
+        <xacro:include filename="gazebo/gazebo_plugins.xacro" />
+        <xacro:include filename="modules/imu_sim.xacro" />
+    </xacro:if>
+
+    <xacro:unless value="$(arg using_sim)">
+        <xacro:include filename="modules/ros2_control.xacro" />
+        <xacro:include filename="modules/imu_real.xacro" />
+    </xacro:unless>
+
+    <!-- ... inside the launch file ...
+    
+    xacro_file = os.path.join(get_package_share_directory('slambot_description'), 'urdf', 'slambot.urdf.xacro')
+    
+    robot_description_config = Command(['xacro ', xacro_file, ' using_sim:=false'])
+    
+    params = {'robot_description': robot_description_config}
+    
+    node_robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        output='screen',
+        parameters=[params]
+    )
+    
+    ... -->
  
 </robot>
