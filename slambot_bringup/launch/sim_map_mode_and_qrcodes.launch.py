@@ -91,7 +91,7 @@ def generate_launch_description():
 
     declare_slam_type_cmd = DeclareLaunchArgument(
         'slam_type', 
-        default_value='cartographer', #or can put 'slamtoolbox'
+        default_value='slamtoolbox', #or can put 'cartographer'
         description='Launches the version of slam you want to use'
     )
 
@@ -206,7 +206,7 @@ def generate_launch_description():
 
     # ================================================================================ # 
 
-    # ============== Start slamtoolbox (only if selected as argument) ================= #
+    # ================ Start slamtoolbox (the default argument) ====================== #
 
     # 1. If NOT using namespacing...
     start_slam_cmd = IncludeLaunchDescription(
@@ -214,7 +214,7 @@ def generate_launch_description():
             os.path.join(pkg_slambot_slam, 'launch', 'slam.launch.py')
         ),
         launch_arguments={
-            'world': LaunchConfiguration('world'),
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
             'robot_name': LaunchConfiguration('robot_name'),
         }.items(),
         #Below tells this NOT to launch if 'using_namespace' set to True
@@ -230,8 +230,8 @@ def generate_launch_description():
             os.path.join(pkg_slambot_slam, 'launch', 'slam_namespaced.launch.py')
         ),
         launch_arguments={
-            'world': LaunchConfiguration('world'),
             'robot_name': LaunchConfiguration('robot_name'),
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
         }.items(),
         #Below tells this NOT to launch if 'using_namespace' set to False
         condition=IfCondition(PythonExpression([
@@ -242,7 +242,7 @@ def generate_launch_description():
     
     # ================================================================================ # 
 
-    # ============== Start cartographer (the default argument) ================= #
+    # ============= Start cartographer (only if selected as argument) ================ #
 
     start_cartographer_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -316,6 +316,7 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('using_joy'))
     )
 
+
     # =================================================================================#
 
 
@@ -342,13 +343,14 @@ def generate_launch_description():
     
     ld.add_action(start_rviz_cmd)
     ld.add_action(start_gz_cmd)
+    ld.add_action(twist_mux_node)
+    ld.add_action(joy_node)
+    ld.add_action(teleop_twist_joy_node)
     ld.add_action(start_slam_cmd)
     ld.add_action(start_slam_cmd_namespaced)
     ld.add_action(start_cartographer_cmd)
     ld.add_action(start_qr_reader_cmd)
     ld.add_action(start_qr_reader_cmd_namespaced)
-    ld.add_action(twist_mux_node)
-    ld.add_action(joy_node)
-    ld.add_action(teleop_twist_joy_node)
+
 
     return ld

@@ -58,7 +58,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
           LaunchConfiguration('slam_params_file'),
-          {'use_sim_time': True} # <-- CRITICAL
+          {'use_sim_time': LaunchConfiguration('use_sim_time')} # <-- CRITICAL
         ]
     )
 

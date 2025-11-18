@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Top-level launch file to start the Gazebo and RVIZ with SLAM.
+Top-level launch file to start the REAL robot with SLAM, localization and EKF sensor fusion.
 You can choose which version of slam you want to use 'cartographer_ros' or 'slam_toolbox'....
 ...depending on preference and which works best in the environment you're mapping
 You can launch with or without a namespaced environment
@@ -16,29 +16,40 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
+from launch.substitutions import Command, FindExecutable
+from launch_ros.parameter_descriptions import ParameterValue
+from launch.actions import DeclareLaunchArgument, TimerAction
+
 
 def generate_launch_description():
 
-    # Get the path to the slambot_gazebo package
-    pkg_slambot_gazebo = get_package_share_directory('slambot_gazebo')
+    # ========================= Paths & Environment Setup =========================== #   
+
+    # 1. Get the paths to the required packages
     pkg_slambot_description = get_package_share_directory('slambot_description')
     pkg_slambot_slam = get_package_share_directory('slambot_slam')
     pkg_slambot_bringup = get_package_share_directory('slambot_bringup')
+    pkg_slambot_localization = get_package_share_directory('slambot_localization')
 
-    # Define Config File Paths
-    # Path to the new twist_mux config
-    twist_mux_file = os.path.join(pkg_slambot_bringup, 'config', 'twist_mux.yaml')
-    
-    # Path for the joystick config
-    joy_config_file = os.path.join(pkg_slambot_bringup, 'config', 'joy_teleop.yaml')
+    # 2. Define file paths
+    xacro_file = os.path.join(pkg_slambot_description, 'urdf', 'slambot.urdf.xacro')
+    controllers_file = os.path.join(pkg_slambot_bringup, 'config', 'slambot_controllers.yaml')
+    twist_mux_file = os.path.join(pkg_slambot_bringup, 'config', 'twist_mux.yaml') # Path to the new twist_mux config
+    joy_config_file = os.path.join(pkg_slambot_bringup, 'config', 'joy_teleop.yaml') # Path for the joystick config
+    ekf_real_params = os.path.join(pkg_slambot_localization, 'config', 'ekf_real.yaml')
+    ekf_real_params_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced_real.yaml')
 
+    # 3. Process URDF
+    robot_description_content = Command(
+        [FindExecutable(name='xacro'), ' ', xacro_file, ' ', 'using_sim:=false']
+    )
+    robot_description = {
+        'robot_description': ParameterValue(robot_description_content, value_type=str)
+    }
+
+    # ===============================================================================#
 
     # ========================= Declare Launch Arguments =========================== #   
-    declare_world_cmd = DeclareLaunchArgument(
-        'world',
-        default_value='indoor_world_with_qr_codes.sdf',
-        description='The world file to launch in Gazebo'
-    )
 
     declare_robot_name_cmd = DeclareLaunchArgument(
         'robot_name',
@@ -46,11 +57,11 @@ def generate_launch_description():
         description='The name/namespace for the robot'
     )
 
-    # Whether to run Gazebo without a GUI
-    declare_headless_cmd = DeclareLaunchArgument(
-        'headless',
-        default_value='False',
-        description='Whether to run Gazebo without a GUI')
+    declare_use_sim_time_cmd = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='MUST BE SET TO FALSE FOR REAL ROBOT!'
+    )
 
     #Namespaces the /tf topics when using Nav2
     declare_using_namespace_cmd = DeclareLaunchArgument(
@@ -59,36 +70,18 @@ def generate_launch_description():
         description='Namespaces all topics (best for multiple robot setups) if set to true'
     )
     
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='true',
-        description='Use simulation (Gazebo) clock if true'
-    )
-    
-    declare_jsp_gui_cmd = DeclareLaunchArgument(
-        'jsp_gui', 
-        default_value='False',
-        description='Flag to enable joint_state_publisher_gui'
-    )
-
     declare_using_localization_cmd = DeclareLaunchArgument(
         'using_localization',
         default_value='True', #Do not change to false, or SLAM won't work
         description='A "True" value is required when using slam or you wont get accurate map'
     )
-    
+
     # This argument allows us to specify the SLAM params file from the command line
     declare_slam_params_file_cmd = DeclareLaunchArgument(
         'slam_params_file',
         default_value=os.path.join(pkg_slambot_slam, 'config', 'slam_params.yaml'),
         description='Full path to the ROS2 parameters file for SLAM'
     )
-
-    declare_ros_gz_bridge_file_cmd = DeclareLaunchArgument(
-        'ros_gz_bridge_file',
-        default_value=os.path.join(pkg_slambot_gazebo, 'config', 'ros_gz_bridge_localization.yaml'),
-        description='Full path to the ros_gz_bridge (with localization) file'
-    ) 
 
     declare_slam_type_cmd = DeclareLaunchArgument(
         'slam_type', 
@@ -104,48 +97,8 @@ def generate_launch_description():
 
     # =============================================================================== # 
 
-
-    # ========================= Dynamic File Path Changes (RVIZ) ========================== #   
-
-    # Path to the RVIZ configuration file (depending on if 'using_namespace') and if using 'slam_toolbox' or 'cartographer_ros'
-    rviz_config_path_slamtoolbox = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_slamtoolbox_config.rviz')
-    rviz_config_path_slamtoolbox_namespaced = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_slamtoolbox_config_namespaced.rviz')
-    rviz_config_path_cartographer = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_cartographer_config.rviz')
-    rviz_config_path_cartographer_namespaced = os.path.join(pkg_slambot_slam, 'rviz', 'gazebo_rviz_cartographer_config_namespaced.rviz')
-
-
-    declare_rviz_config_file_cmd = DeclareLaunchArgument(
-        'rviz_config_file',
-        default_value=PythonExpression([
-            # Check 1: If slam_type is 'cartographer'
-            "'", rviz_config_path_cartographer_namespaced, "' if '",
-            LaunchConfiguration('slam_type'),
-            "'.lower() == 'cartographer' and '",
-            LaunchConfiguration('using_namespace'),
-            "'.lower() == 'true' else '",
-
-            # Check 2: If slam_type is 'cartographer' (and namespaced is false)
-            rviz_config_path_cartographer, "' if '",
-            LaunchConfiguration('slam_type'),
-            "'.lower() == 'cartographer' else '",
-            
-            # Check 3: If slam_type is 'slamtoolbox' and namespaced is true
-            rviz_config_path_slamtoolbox_namespaced, "' if '",
-            LaunchConfiguration('slam_type'),
-            "'.lower() == 'slamtoolbox' and '",
-            LaunchConfiguration('using_namespace'),
-            "'.lower() == 'true' else '",
-
-            # Check 4: If slam_type is 'slamtoolbox' (and namespaced is false) - This is the final 'else'
-            rviz_config_path_slamtoolbox, "'"
-        ]),
-        description='Full path to the RViz config file. Automatically selects based on slam_type and using_namespace.'
-    )
-
-
-    # ================================================================================== # 
     
-    # ======================= Cartographer File Path Setup ==============================#   
+    # ======================= Cartographer File Path Setup (If using) ==============================#   
 
     cartographer_config_dir = LaunchConfiguration('cartographer_config_dir', default=os.path.join(pkg_slambot_slam, 'config'))
     configuration_basename = LaunchConfiguration('configuration_basename', default='cartographer_params.lua')
@@ -168,46 +121,109 @@ def generate_launch_description():
 
     # ================================================================================== #
 
-    # =========== Launch RVIZ and Robot State Publisher From rviz.launch.py ============ # 
-    
-    start_rviz_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_slambot_description, 'launch', 'rviz.launch.py')
-        ),
-        # Pass the launch arguments to the included launch file
-        launch_arguments={
-            'robot_name': LaunchConfiguration('robot_name'),
-            'use_sim_time': LaunchConfiguration('use_sim_time'),
-            'rviz_config_file': LaunchConfiguration('rviz_config_file'), # Pass the config file down
-            'jsp_gui': LaunchConfiguration('jsp_gui'),
-            'using_namespace': LaunchConfiguration('using_namespace')
-        }.items()
+    # =========================== Start ROS2 Control Nodes ============================= #
+
+    # 1. Micro-ROS Agent
+    micro_ros_agent = Node(
+        package='micro_ros_agent',
+        executable='micro_ros_agent',
+        name='micro_ros_agent',
+        arguments=['serial', '--dev', '/dev/ttyACM0', '-b', '115200'],
+        output='screen'
     )
 
-    # ================================================================================ # 
+    # 2. Robot State Publisher
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        output='both',
+        parameters=[robot_description]
+    )
     
-    
-    # =================== Launch Gazebo From gazebo.launch.py ========================= # 
+    # 3. Twist Mux Node (loads twist_mux.yaml)
+    twist_mux_node = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        parameters=[twist_mux_file],
+        remappings=[("cmd_vel_out", "/cmd_vel")] 
+    )
 
-    start_gz_cmd = IncludeLaunchDescription(
+    # 4. Twist Stamper (listens to twist_mux)
+    twist_stamper_node = Node(
+        package='twist_stamper',
+        executable='twist_stamper',
+        name='twist_stamper',
+        remappings=[
+            ('cmd_vel_in', '/cmd_vel'),
+            ('cmd_vel_out', '/cmd_vel_stamped')
+        ]
+    )
+
+    # 5. Control Node (listens to stamper)
+    control_node = Node(
+        package='controller_manager',
+        executable='ros2_control_node',
+        parameters=[robot_description, controllers_file],
+        output='both',
+        remappings=[
+            ('~/robot_description', '/robot_description'),
+            ('/diff_drive_controller/odom', '/odom'),
+            ('/diff_drive_controller/cmd_vel', '/cmd_vel_stamped') 
+        ],
+    )
+
+    # 6. Spawners
+    joint_state_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster', '--controller-manager', '/controller_manager'],
+    )
+
+    diff_drive_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['diff_drive_controller', '--controller-manager', '/controller_manager'],
+    )
+
+    imu_sensor_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['imu_sensor_broadcaster', '--controller-manager', '/controller_manager'],
+    )
+
+    # Delay spawners to give the controller manager time to load the hardware interface
+    delayed_spawners = TimerAction(
+        period=3.0,
+        actions=[
+            joint_state_broadcaster_spawner,
+            diff_drive_spawner,
+            imu_sensor_spawner
+        ]
+    )
+
+    
+    # ================================================================================== #
+
+    # =========================== Start Localization (EKF) ============================= #
+    
+    start_ekf_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_slambot_gazebo, 'launch', 'gazebo.launch.py')
+            os.path.join(pkg_slambot_localization, 'launch', 'localization.launch.py')
         ),
-        # Pass the launch arguments to the included launch file
         launch_arguments={
-            'world': LaunchConfiguration('world'),
             'robot_name': LaunchConfiguration('robot_name'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
             'using_namespace': LaunchConfiguration('using_namespace'),
-            'headless': LaunchConfiguration('headless'),
-            'using_localization': LaunchConfiguration('using_localization'), #MUST be 'True'
-            'ros_gz_bridge_file': LaunchConfiguration('ros_gz_bridge_file') 
-        }.items()
+            'ekf_param_file': ekf_real_params,
+            'ekf_param_file_namespaced': ekf_real_params_namespaced
+        }.items(),
+        condition=IfCondition(LaunchConfiguration('using_localization'))
     )
 
-    # ================================================================================ # 
+    # ================================================================================== #
 
-    # ================ Start slamtoolbox (the default argument) ====================== #
+
+    # ============== Start slamtoolbox (the default argument) ================= #
 
     # 1. If NOT using namespacing...
     start_slam_cmd = IncludeLaunchDescription(
@@ -215,8 +231,8 @@ def generate_launch_description():
             os.path.join(pkg_slambot_slam, 'launch', 'slam.launch.py')
         ),
         launch_arguments={
-            'use_sim_time': LaunchConfiguration('use_sim_time'),
             'robot_name': LaunchConfiguration('robot_name'),
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
         }.items(),
         #Below tells this NOT to launch if 'using_namespace' set to True
         condition=IfCondition(PythonExpression([
@@ -243,7 +259,7 @@ def generate_launch_description():
     
     # ================================================================================ # 
 
-    # ============= Start cartographer (only if selected as argument) ================ #
+    # ============== Start cartographer(only if selected as argument) ================= #
 
     start_cartographer_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -263,14 +279,8 @@ def generate_launch_description():
     
     # ================================================================================ # 
 
-    # =================== Launch Twist Mux and Teleop Nodes Here =================== #
+    # =================== Launch Teleop Nodes Here =================== #
 
-    twist_mux_node = Node(
-        package="twist_mux",
-        executable="twist_mux",
-        parameters=[twist_mux_file],
-        remappings=[("cmd_vel_out", "/cmd_vel")] 
-    )
 
     # Start the 'joy' driver node, *if* using_joy is true
     joy_node = Node(
@@ -296,36 +306,34 @@ def generate_launch_description():
 
     # =================================================================================#
 
+
+
     # ========================= Create Launch Description ============================ # 
     
     ld = LaunchDescription()
 
     # Add the declared arguments and the include action
-    ld.add_action(declare_world_cmd)
     ld.add_action(declare_robot_name_cmd)
-    ld.add_action(declare_headless_cmd)
-    ld.add_action(declare_using_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_jsp_gui_cmd)
+    ld.add_action(declare_using_namespace_cmd)
     ld.add_action(declare_using_localization_cmd)
     ld.add_action(declare_slam_params_file_cmd)
-    ld.add_action(declare_ros_gz_bridge_file_cmd)
     ld.add_action(declare_slam_type_cmd)
     ld.add_action(declare_configuration_directory_cmd)
     ld.add_action(declare_cartographer_config_file_cmd)
     ld.add_action(declare_using_joy_cmd)
-    #Dynamic file changes here
-    ld.add_action(declare_rviz_config_file_cmd)
     
-    ld.add_action(start_rviz_cmd)
-    ld.add_action(start_gz_cmd)
+    ld.add_action(micro_ros_agent)
+    ld.add_action(robot_state_publisher_node)
     ld.add_action(twist_mux_node)
-    ld.add_action(joy_node)
-    ld.add_action(teleop_twist_joy_node)
+    ld.add_action(twist_stamper_node)
+    ld.add_action(control_node)
+    ld.add_action(delayed_spawners)
+    ld.add_action(start_ekf_localization_cmd)
     ld.add_action(start_slam_cmd)
     ld.add_action(start_slam_cmd_namespaced)
     ld.add_action(start_cartographer_cmd)
-
-
+    ld.add_action(joy_node)
+    ld.add_action(teleop_twist_joy_node)
 
     return ld

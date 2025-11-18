@@ -67,6 +67,7 @@ def generate_launch_description():
     )
 
     # =================== Cartographer Node (Non-Namespaced) =================== #
+    
     start_cartographer_node = Node(
         package='cartographer_ros',
         executable='cartographer_node',

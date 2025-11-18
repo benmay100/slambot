@@ -22,8 +22,20 @@ def generate_launch_description():
     
     # --- EKF Configuration File ---
     # Construct the full path to the EKF configuration file
-    ekf_config_path = os.path.join(pkg_slambot_localization, 'config', 'ekf_v2.yaml')
-    ekf_config_path_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced_v2.yaml')
+    ekf_config_path = os.path.join(pkg_slambot_localization, 'config', 'ekf_sim.yaml')
+    ekf_config_path_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced_sim.yaml')
+
+    declare_ekf_param_file_cmd = DeclareLaunchArgument(
+        'ekf_param_file',
+        default_value=ekf_config_path,
+        description='Full path to the EKF parameter file (non-namespaced)'
+    )
+
+    declare_ekf_param_file_namespaced_cmd = DeclareLaunchArgument(
+        'ekf_param_file_namespaced',
+        default_value=ekf_config_path_namespaced,
+        description='Full path to the EKF parameter file when namespacing is enabled'
+    )
 
     # --- Declare Launch Arguments ---
     # This argument is no longer needed for the namespace but is kept for potential future use
@@ -59,7 +71,7 @@ def generate_launch_description():
         output='screen',
         # namespace=LaunchConfiguration('robot_name'), # <-- REMOVED: Run node in global namespace
         parameters=[
-            ekf_config_path,
+            LaunchConfiguration('ekf_param_file'),
             {'use_sim_time': LaunchConfiguration('use_sim_time')}
         ],
     )
@@ -73,7 +85,7 @@ def generate_launch_description():
         output='screen',
         # namespace=LaunchConfiguration('robot_name'), # <-- REMOVED: Run node in global namespace
         parameters=[
-            ekf_config_path_namespaced,
+            LaunchConfiguration('ekf_param_file_namespaced'),
             {'use_sim_time': LaunchConfiguration('use_sim_time')}
         ],
         # Remap the default output topic to the desired namespaced topic
@@ -93,6 +105,8 @@ def generate_launch_description():
     ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_using_namespace_cmd)
+    ld.add_action(declare_ekf_param_file_cmd)
+    ld.add_action(declare_ekf_param_file_namespaced_cmd)
     ld.add_action(start_ekf_node)
     ld.add_action(start_ekf_node_namespaced)
 

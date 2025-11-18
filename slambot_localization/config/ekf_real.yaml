@@ -1,6 +1,6 @@
-# ekf.yaml
-# The definitive configuration for the robot_localization EKF node.
-# Fuses wheel odometry and IMU data, and handles zero-covariance sensor messages.
+# ekf_real.yaml
+# EKF configuration tuned for the physical Slambot.
+# Fuses wheel odometry with the raw IMU topic published by the micro-ROS firmware.
 
 ekf_filter_node:
   ros__parameters:
@@ -10,14 +10,14 @@ ekf_filter_node:
     two_d_mode: true
     publish_tf: true
 
-    # FRAME PARAMETERS (Corrected to be non-namespaced)
-    map_frame: map  #We aren't using prefixed frames here but if you were (e.g. myrobot_map) then need to account for that here
-    odom_frame: odom #We aren't using prefixed frames here but if you were (e.g. myrobot_odom) then need to account for that here
-    base_link_frame: base_footprint  #Make sure to use 'base_footprint' (not 'base_link') if you have a base_footprint to ensure a complete TF tree
-    world_frame: odom #We aren't using prefixed frames here but if you were (e.g. myrobot_odom) then need to account for that here
+    # FRAME PARAMETERS (non-namespaced)
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom
 
     # SENSOR INPUT 0: WHEEL ODOMETRY
-    odom0: odom  #We are using namespaced topics, hence 'robotname/topic'
+    odom0: odom
     odom0_config: [false, false, false,
                    false, false, false,
                    true,  true,  false,
@@ -25,52 +25,45 @@ ekf_filter_node:
                    false, false, false]
     odom0_differential: false
     odom0_relative: false
-    
-    # --- OVERRIDE COVARIANCE FOR ODOM ---
-    # This is a failsafe in case the Gazebo odometry also has zero covariance.
     odom0_pose_covariance: [0.001, 0.0,   0.0,   0.0,   0.0,   0.0,
                             0.0,   0.001, 0.0,   0.0,   0.0,   0.0,
                             0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,
                             0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,
                             0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,
                             0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
-
     odom0_twist_covariance: [0.001, 0.0,   0.0,   0.0,   0.0,   0.0,
                              0.0,   0.001, 0.0,   0.0,   0.0,   0.0,
                              0.0,   0.0,   1e-9,  0.0,   0.0,   0.0,
                              0.0,   0.0,   0.0,   1e-9,  0.0,   0.0,
                              0.0,   0.0,   0.0,   0.0,   1e-9,  0.0,
                              0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
+    odom0_twist_covariance[11]: 1.0  # downweight yaw rate from wheel odom
 
-    # SENSOR INPUT 1: IMU DATA
-    imu0: imu/data #We are using namespaced topics, hence 'robotname/topic'
+    # SENSOR INPUT 1: IMU DATA (raw micro-ROS topic)
+    imu0: imu/data_raw
     imu0_config: [false, false, false,
                   true,  true,  true,
                   false, false, false,
-                  true,  true,  true,
+                  false, false, true,
                   false, false, false]
     imu0_differential: false
     imu0_relative: false
     imu0_remove_gravitational_acceleration: true
-
-    # --- CRITICAL: OVERRIDE COVARIANCE FOR IMU ---
-    # This forces the EKF to accept the IMU data by providing a non-zero covariance.
     imu0_pose_covariance: [0.001, 0.0,   0.0,   0.0,   0.0,   0.0,
                            0.0,   0.001, 0.0,   0.0,   0.0,   0.0,
                            0.0,   0.0,   0.001, 0.0,   0.0,   0.0,
                            0.0,   0.0,   0.0,   0.001, 0.0,   0.0,
                            0.0,   0.0,   0.0,   0.0,   0.001, 0.0,
                            0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
-
     imu0_twist_covariance: [0.001, 0.0,   0.0,   0.0,   0.0,   0.0,
                             0.0,   0.001, 0.0,   0.0,   0.0,   0.0,
                             0.0,   0.0,   0.001, 0.0,   0.0,   0.0,
                             0.0,   0.0,   0.0,   0.001, 0.0,   0.0,
                             0.0,   0.0,   0.0,   0.0,   0.001, 0.0,
                             0.0,   0.0,   0.0,   0.0,   0.0,   0.001]
-                            
-    # --- PROCESS NOISE COVARIANCE ---
-    # These values represent the filter's uncertainty about its own motion model.
+    imu0_twist_covariance[5]: 1.0e-5  # trust yaw rate from IMU
+
+    # PROCESS NOISE COVARIANCE
     process_noise_covariance: [0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                                0.0,  0.05, 0.0,  0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                                0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,   0.0,   0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,

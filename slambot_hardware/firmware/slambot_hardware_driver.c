@@ -28,6 +28,7 @@
 
 #include <std_msgs/msg/string.h>
 #include <std_msgs/msg/float32_multi_array.h>
+#include <std_msgs/msg/int16_multi_array.h>
 #include <sensor_msgs/msg/imu.h>
 
 #include "pico/stdlib.h"
@@ -57,7 +58,7 @@
 #define PWM_LIMIT 60000.0f
 #define MIN_EFFECTIVE_PWM 1500.0f
 #define MAX_OUTPUT_STEP_PER_SEC 30000.0f
-#define MAX_TARGET_SLEW_TPS_PER_SEC 400.0f
+#define MAX_TARGET_SLEW_TPS_PER_SEC 2500.0f
 #define KICK_PWM_LEVEL 9000
 #define KICK_DURATION_MS 150U
 
@@ -93,12 +94,16 @@ static std_msgs__msg__Float32MultiArray wheel_state_msg;
 static std_msgs__msg__Float32MultiArray wheel_command_msg;
 static sensor_msgs__msg__Imu imu_msg;
 static std_msgs__msg__Float32MultiArray imu_calib_msg;
+static std_msgs__msg__String imu_offsets_msg;
+static std_msgs__msg__Int16MultiArray imu_offsets_array_msg;
 
 static rcl_publisher_t motor_state_pub;
 static rcl_publisher_t wheel_state_pub;
 static rcl_publisher_t tick_pub;
 static rcl_publisher_t imu_pub;
 static rcl_publisher_t imu_calib_pub;
+static rcl_publisher_t imu_offsets_pub;
+static rcl_publisher_t imu_offsets_array_pub;
 static rcl_subscription_t wheel_cmd_sub;
 
 static rclc_executor_t executor;
@@ -111,6 +116,8 @@ static char tick_buffer[128];
 static float wheel_state_buffer[MOTOR_COUNT * 2];
 static float wheel_command_buffer[MOTOR_COUNT];
 static float imu_calib_buffer[4];
+static char imu_offsets_buffer[1024];
+static int16_t imu_offsets_array_buffer[24];
 static char imu_frame_id[16] = "imu_link";
 
 /* GPIO assignment mirrors the wiring harness so the ISR can map back to motors */
@@ -142,6 +149,33 @@ static volatile uint32_t encoder_filtered_events[MOTOR_COUNT] = {0};
 static volatile uint32_t encoder_invalid_transitions[MOTOR_COUNT] = {0};
 
 static bno055_imu_t imu_sensor = {0};
+static bool imu_offsets_published = false;
+static bool imu_offsets_applied = false;
+static bool imu_offsets_boot_report_pending = false;
+static uint8_t imu_offsets_attempts = 0;
+static uint32_t imu_offsets_last_attempt_ms = 0;
+
+/* Automatically-applied BNO055 offsets captured on 2025-11-16 (evening run). */
+static const bno055_imu_offsets_t k_static_imu_offsets = {
+    .has_accel = true,
+    .has_gyro = true,
+    .has_mag = true,
+    .has_sic = true,
+    .accel = { .x = -13, .y = 29, .z = -28, .r = 1000 },
+    .gyro = { .x = -2, .y = -2, .z = 0 },
+    .mag = { .x = 75, .y = 626, .z = -625, .r = 888 },
+    .sic = {
+        .sic_0 = 16384,
+        .sic_1 = 0,
+        .sic_2 = 0,
+        .sic_3 = 0,
+        .sic_4 = 16384,
+        .sic_5 = 0,
+        .sic_6 = 0,
+        .sic_7 = 0,
+        .sic_8 = 16384
+    }
+};
 
 /* Clamp helper avoids sprinkling fmin/fmax calls through the PID code */
 static inline float clampf(float value, float min_val, float max_val) {
@@ -514,6 +548,17 @@ static void init_messages(void) {
     imu_calib_msg.layout.dim.size = 0;
     imu_calib_msg.layout.dim.capacity = 0;
     imu_calib_msg.layout.data_offset = 0;
+
+    imu_offsets_msg.data.data = imu_offsets_buffer;
+    imu_offsets_msg.data.size = 0;
+    imu_offsets_msg.data.capacity = sizeof(imu_offsets_buffer);
+
+    imu_offsets_array_msg.data.data = imu_offsets_array_buffer;
+    imu_offsets_array_msg.data.size = 24;
+    imu_offsets_array_msg.data.capacity = 24;
+    imu_offsets_array_msg.layout.dim.size = 0;
+    imu_offsets_array_msg.layout.dim.capacity = 0;
+    imu_offsets_array_msg.layout.data_offset = 0;
 }
 
 /* Bring up PWM, encoders, and initialise every motor instance */
@@ -532,6 +577,26 @@ static void setup_motors(void) {
 }
 
 /* Configure I2C pins and bring the BNO055 online in NDOF mode */
+static void apply_static_imu_offsets(void) {
+    if (!k_static_imu_offsets.has_accel &&
+        !k_static_imu_offsets.has_gyro &&
+        !k_static_imu_offsets.has_mag &&
+        !k_static_imu_offsets.has_sic) {
+        return;
+    }
+
+    if (!bno055_imu_write_offsets(&imu_sensor, &k_static_imu_offsets)) {
+        printf("Failed to apply stored BNO055 offsets\n");
+        imu_offsets_applied = false;
+    } else {
+        imu_offsets_applied = true;
+        imu_offsets_boot_report_pending = true;
+    }
+
+    imu_offsets_attempts++;
+    imu_offsets_last_attempt_ms = to_ms_since_boot(get_absolute_time());
+}
+
 static void setup_imu(void) {
     i2c_init(IMU_I2C_PORT, 400 * 1000);
     gpio_set_function(IMU_I2C_SDA_PIN, GPIO_FUNC_I2C);
@@ -547,6 +612,8 @@ static void setup_imu(void) {
             sleep_ms(850);
         }
     }
+
+    apply_static_imu_offsets();
 }
 
 /* Initialise the micro-ROS node, publishers, subscriber, and executor */
@@ -625,6 +692,34 @@ static void setup_microros(void) {
             sleep_ms(600);
             gpio_put(LED_PIN, 0);
             sleep_ms(400);
+        }
+    }
+
+    rc = rclc_publisher_init_default(
+        &imu_offsets_pub,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
+        "imu/calibration_offsets");
+    if (rc != RCL_RET_OK) {
+        while (true) {
+            gpio_put(LED_PIN, 1);
+            sleep_ms(700);
+            gpio_put(LED_PIN, 0);
+            sleep_ms(300);
+        }
+    }
+
+    rc = rclc_publisher_init_default(
+        &imu_offsets_array_pub,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
+        "imu/calibration_offsets_raw");
+    if (rc != RCL_RET_OK) {
+        while (true) {
+            gpio_put(LED_PIN, 1);
+            sleep_ms(750);
+            gpio_put(LED_PIN, 0);
+            sleep_ms(250);
         }
     }
 
@@ -790,6 +885,78 @@ static void publish_tick_state(void) {
     }
 }
 
+static bool publish_imu_offset_snapshot(void) {
+    bno055_imu_offsets_t offsets = {0};
+    if (!bno055_imu_read_offsets(&imu_sensor, &offsets)) {
+        return false;
+    }
+
+    imu_offsets_array_buffer[0] = (int16_t)(offsets.has_accel ? 1 : 0);
+    imu_offsets_array_buffer[1] = (int16_t)(offsets.has_gyro ? 1 : 0);
+    imu_offsets_array_buffer[2] = (int16_t)(offsets.has_mag ? 1 : 0);
+    imu_offsets_array_buffer[3] = (int16_t)(offsets.has_sic ? 1 : 0);
+    imu_offsets_array_buffer[4] = offsets.accel.x;
+    imu_offsets_array_buffer[5] = offsets.accel.y;
+    imu_offsets_array_buffer[6] = offsets.accel.z;
+    imu_offsets_array_buffer[7] = offsets.accel.r;
+    imu_offsets_array_buffer[8] = offsets.gyro.x;
+    imu_offsets_array_buffer[9] = offsets.gyro.y;
+    imu_offsets_array_buffer[10] = offsets.gyro.z;
+    imu_offsets_array_buffer[11] = offsets.mag.x;
+    imu_offsets_array_buffer[12] = offsets.mag.y;
+    imu_offsets_array_buffer[13] = offsets.mag.z;
+    imu_offsets_array_buffer[14] = offsets.mag.r;
+    imu_offsets_array_buffer[15] = offsets.sic.sic_0;
+    imu_offsets_array_buffer[16] = offsets.sic.sic_1;
+    imu_offsets_array_buffer[17] = offsets.sic.sic_2;
+    imu_offsets_array_buffer[18] = offsets.sic.sic_3;
+    imu_offsets_array_buffer[19] = offsets.sic.sic_4;
+    imu_offsets_array_buffer[20] = offsets.sic.sic_5;
+    imu_offsets_array_buffer[21] = offsets.sic.sic_6;
+    imu_offsets_array_buffer[22] = offsets.sic.sic_7;
+    imu_offsets_array_buffer[23] = offsets.sic.sic_8;
+
+    rcl_publish(&imu_offsets_array_pub, &imu_offsets_array_msg, NULL);
+
+    int written = snprintf(imu_offsets_buffer,
+                           sizeof(imu_offsets_buffer),
+                           "/* BNO055 offsets captured at %lu ms */ static const bno055_imu_offsets_t k_static_imu_offsets = { .has_accel = %s, .has_gyro = %s, .has_mag = %s, .has_sic = %s, .accel = { .x = %d, .y = %d, .z = %d, .r = %d }, .gyro = { .x = %d, .y = %d, .z = %d }, .mag = { .x = %d, .y = %d, .z = %d, .r = %d }, .sic = { .sic_0 = %d, .sic_1 = %d, .sic_2 = %d, .sic_3 = %d, .sic_4 = %d, .sic_5 = %d, .sic_6 = %d, .sic_7 = %d, .sic_8 = %d } };\n",
+                           (unsigned long)to_ms_since_boot(get_absolute_time()),
+                           offsets.has_accel ? "true" : "false",
+                           offsets.has_gyro ? "true" : "false",
+                           offsets.has_mag ? "true" : "false",
+                           offsets.has_sic ? "true" : "false",
+                           (int)offsets.accel.x,
+                           (int)offsets.accel.y,
+                           (int)offsets.accel.z,
+                           (int)offsets.accel.r,
+                           (int)offsets.gyro.x,
+                           (int)offsets.gyro.y,
+                           (int)offsets.gyro.z,
+                           (int)offsets.mag.x,
+                           (int)offsets.mag.y,
+                           (int)offsets.mag.z,
+                           (int)offsets.mag.r,
+                           (int)offsets.sic.sic_0,
+                           (int)offsets.sic.sic_1,
+                           (int)offsets.sic.sic_2,
+                           (int)offsets.sic.sic_3,
+                           (int)offsets.sic.sic_4,
+                           (int)offsets.sic.sic_5,
+                           (int)offsets.sic.sic_6,
+                           (int)offsets.sic.sic_7,
+                           (int)offsets.sic.sic_8);
+
+    if (written <= 0 || written >= (int)sizeof(imu_offsets_buffer)) {
+        return false;
+    }
+
+    imu_offsets_buffer[written] = '\0';
+    imu_offsets_msg.data.size = (size_t)written;
+    rcl_publish(&imu_offsets_pub, &imu_offsets_msg, NULL);
+    return true;
+}
+
 static void publish_imu_calibration(void) {
     uint8_t sys = 0;
     uint8_t gyro = 0;
@@ -806,11 +973,26 @@ static void publish_imu_calibration(void) {
     imu_calib_buffer[3] = (float)mag;
 
     rcl_publish(&imu_calib_pub, &imu_calib_msg, NULL);
+
+    if ((sys == 3U) && (gyro == 3U) && (accel == 3U) && (mag == 3U) && !imu_offsets_published) {
+        if (publish_imu_offset_snapshot()) {
+            imu_offsets_published = true;
+        }
+    }
+
+    if (mag >= 1U) {
+        imu_offsets_applied = true;
+    } else if (imu_offsets_attempts > 0U && imu_offsets_attempts < 5U) {
+        uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+        if ((now_ms - imu_offsets_last_attempt_ms) >= 1500U) {
+            imu_offsets_applied = false;
+        }
+    }
 }
 
 int main(void) {
     stdio_init_all();
-    sleep_ms(200);
+    sleep_ms(1000); // Wait for hardware to stabilise
 
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
@@ -891,6 +1073,20 @@ int main(void) {
         if ((now_ms - last_tick_pub_ms) >= TICK_PUBLISH_MS) {
             last_tick_pub_ms = now_ms;
             publish_tick_state();
+        }
+
+        if (!imu_offsets_applied && (imu_offsets_attempts > 0U) && (imu_offsets_attempts < 5U)) {
+            if ((now_ms - imu_offsets_last_attempt_ms) >= 500U) {
+                apply_static_imu_offsets();
+            }
+        }
+
+        if (imu_offsets_boot_report_pending) {
+            if ((now_ms - imu_offsets_last_attempt_ms) >= 250U) {
+                if (publish_imu_offset_snapshot()) {
+                    imu_offsets_boot_report_pending = false;
+                }
+            }
         }
 
         if ((now_ms - last_imu_calib_pub_ms) >= 1000U) {

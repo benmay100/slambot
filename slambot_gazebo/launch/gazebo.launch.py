@@ -173,7 +173,7 @@ def generate_launch_description():
             'use_sim_time': LaunchConfiguration('use_sim_time'),
             'using_namespace': LaunchConfiguration('using_namespace')
         }.items(),
-        condition=IfCondition(PythonExpression([' ', LaunchConfiguration('using_localization')]))
+        condition=IfCondition(LaunchConfiguration('using_localization'))
     )
 
 

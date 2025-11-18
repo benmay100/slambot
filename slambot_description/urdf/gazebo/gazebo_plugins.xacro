@@ -17,7 +17,12 @@
             <wheel_separation>0.198</wheel_separation>
             <wheel_radius>0.034</wheel_radius>
             <!--limits-->
-            <max_linear_acceleration>10</max_linear_acceleration>
+            <max_linear_acceleration>0.4</max_linear_acceleration> <!-- Smooth ramp-up linear -->
+            <min_linear_acceleration>-0.4</min_linear_acceleration> <!-- Snappy braking linear -->
+            <max_angular_acceleration>1</max_angular_acceleration> <!-- Smooth ramp-up turning -->
+            <min_angular_acceleration>-1</min_angular_acceleration> <!-- Snappy stop turning -->
+            <max_linear_velocity>0.2</max_linear_velocity> <!-- Matches real robot max linear velocity -->
+            <max_angular_velocity>2.02</max_angular_velocity> <!-- Matches real robot max angular velocity -->
             <!--topics, frames and odometry-->
             <topic>/cmd_vel</topic>
             <tf_topic>/tf</tf_topic>
