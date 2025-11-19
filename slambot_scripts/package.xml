@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>slambot_controllers</name>
+  <name>slambot_scripts</name>
   <version>0.1.0</version>
   <description>Python nodes for QR code detection and waypoint logging to support Slambot mapping workflows.</description>
   <maintainer email="benalexandermay@gmail.com">ben-may</maintainer>
@@ -13,9 +13,11 @@
   <depend>tf2_ros</depend>
   <depend>tf_transformations</depend>
   <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
   
   <exec_depend>python3-opencv</exec_depend> 
   <exec_depend>geometry_msgs</exec_depend> 
+  <exec_depend>nav2_simple_commander</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

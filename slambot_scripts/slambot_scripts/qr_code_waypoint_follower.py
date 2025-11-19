@@ -15,7 +15,7 @@ import sys # For clean exit
 
 # This data needs to be loaded before the node starts.
 try:
-    package_name = 'slambot_controllers'
+    package_name = 'slambot_scripts'
     share_directory = get_package_share_directory(package_name)
     json_file_path = os.path.join(share_directory, 'data', 'qr_codes_coordinates.json')
     

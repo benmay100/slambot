@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Top-level launch file to start the Gazebo and RVIZ with SLAM (you can choose between 'cartographer' and 'slam_toolbox')
-Importantly, this launch file also runs the 'qr_code_reader' node from the 'slambot_controllers' package
+Importantly, this launch file also runs the 'qr_code_reader' node from the 'slambot_scripts' package
 As this is designed for launching into an environment with QR codes dotted around, so you can map your environment AND...
 ...stop at each QR code to automatically get the coordinates and robot position for use in a later Nav2 automated program 
 
@@ -262,11 +262,11 @@ def generate_launch_description():
     
     # ================================================================================ # 
 
-    # =========== Run the 'qr_code_reader.py' node (in 'slam_controllers') ============ #
+    # =========== Run the 'qr_code_reader.py' node (in 'slambot_scripts') ============ #
 
     start_qr_reader_cmd = Node(
         condition=UnlessCondition(LaunchConfiguration('using_namespace')),
-        package='slambot_controllers',
+    package='slambot_scripts',
         executable='qr_code_reader', 
         name='qr_code_mazer_driver',
         parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
@@ -275,7 +275,7 @@ def generate_launch_description():
 
     start_qr_reader_cmd_namespaced = Node(
         condition=IfCondition(LaunchConfiguration('using_namespace')),
-        package='slambot_controllers',
+    package='slambot_scripts',
         executable='qr_code_reader', 
         name='qr_code_mazer_driver',
         parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
