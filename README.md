@@ -85,15 +85,12 @@ sudo usermod -aG dialout $USER
 # We must activate the GPIO and PWM pins which the lidar will use...
 sudo nano /boot/firmware/config.txt
 # Scroll to the bottom and add these exact lines to the end of the file...
-
-# Force high current USB even if power supply is weak
 usb_max_current_enable=1
-# Force enable UART for lidar on GPIO 14/15 (pins 8/10)
 enable_uart=1
 dtparam=uart0=on
-# Force enable PWM pin for lidar on Pin 12 (GPIO 18)
 dtoverlay=pwm-2chan,pin=18,func=2
-# And reboot
+
+# Once done you can reboot
 sudo reboot
 
 ```
