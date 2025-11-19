@@ -17,14 +17,14 @@ A Custom Autonomous Mapping & Navigation Robot (Slambot) Which Can Be Run In Rea
 
 ### Suggested file structure...
 ```python
-#Example / Suggested
+# Up to you, but this is the suggested structure (NOTE: 'ldlidar_ws' folder only needed on the RaspberryPi, not the dev machine)
 mkdir -p ~/ros_workspace/slambot_ws/src # Where main slambot program will live
 mkdir -p ~/ros_workspace/ldlidar_ws/src # A necessary third party lidar driver 
 mkdir -p ~/ros_workspace/microros_agent/src # Necessary to ensure MicroROS is functioning on both the dev machine AND the embedded Raspberry Pi
 
 ```
 
-### Initial installs -> Micro ROS Agent
+### Initial installs -> Micro ROS Agent (Dev Machine AND RaspberryPi)
 ```python
 #Clone it...
 cd ~/ros_workspace/microros_agent/src
@@ -44,7 +44,7 @@ ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 baudrate=1152
 
 ```
 
-### Initial installs -> LDLidar Driver 
+### Initial installs -> LDLidar Driver (Raspberry Pi Only)
 ```python
 #Clone it...
 cd ~/ros_workspace/ldlidar_ws/src
