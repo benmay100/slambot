@@ -50,6 +50,7 @@
 #define WHEEL_STATE_PUBLISH_MS 100U
 #define IMU_PUBLISH_MS 50U
 #define TICK_PUBLISH_MS 250U
+#define AGENT_CONNECT_TIMEOUT_MS 60000U
 #define COMMAND_TIMEOUT_MS 1000U
 
 /* Velocity estimation and PID behaviour tuning */
@@ -1011,14 +1012,16 @@ int main(void) {
         pico_serial_transport_read);
 
     const int agent_timeout_ms = 1000;
-    const uint8_t agent_attempts = 30;
-    rcl_ret_t ping = rmw_uros_ping_agent(agent_timeout_ms, agent_attempts);
-    if (ping != RCL_RET_OK) {
-        while (true) {
-            gpio_put(LED_PIN, 1);
-            sleep_ms(100);
-            gpio_put(LED_PIN, 0);
-            sleep_ms(900);
+    const uint32_t agent_deadline_ms = to_ms_since_boot(get_absolute_time()) + AGENT_CONNECT_TIMEOUT_MS;
+
+    while (rmw_uros_ping_agent(agent_timeout_ms, 1) != RCL_RET_OK) {
+        gpio_put(LED_PIN, 1);
+        sleep_ms(100);
+        gpio_put(LED_PIN, 0);
+        sleep_ms(900);
+
+        if (to_ms_since_boot(get_absolute_time()) >= agent_deadline_ms) {
+            goto agent_connection_failure;
         }
     }
 
@@ -1093,6 +1096,14 @@ int main(void) {
             last_imu_calib_pub_ms = now_ms;
             publish_imu_calibration();
         }
+    }
+
+agent_connection_failure:
+    while (true) {
+        gpio_put(LED_PIN, 1);
+        sleep_ms(100);
+        gpio_put(LED_PIN, 0);
+        sleep_ms(900);
     }
 
     return 0;

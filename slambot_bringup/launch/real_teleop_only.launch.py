@@ -1,38 +1,36 @@
+"""
+Top-level launch file to start the REAL robot with teleoperation, localization and EKF sensor fusion (no SLAM or Nav2)
+You can launch with or without a namespaced environment
+
+"""
+
+
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
-    # --- LAUNCH ARGUMENTS ---
-    
-    # ADDED: Argument to select teleop mode
-    using_joy_arg = DeclareLaunchArgument(
-        'using_joy',
-        default_value='true',
-        description='Set to true to launch joystick teleop nodes, false to use keyboard.'
-    )
 
-    # --- CONFIGURATION ---
+    # ========================= Paths & Environment Setup =========================== #   
     
-    # 1. Get package paths
-    description_pkg_path = get_package_share_directory('slambot_description')
-    bringup_pkg_path = get_package_share_directory('slambot_bringup')
+    # 1. Get the paths to the required packages
+    pkg_slambot_description = get_package_share_directory('slambot_description')
+    pkg_slambot_bringup = get_package_share_directory('slambot_bringup')
+    pkg_slambot_localization = get_package_share_directory('slambot_localization')
     
     # 2. Define file paths
-    xacro_file = os.path.join(description_pkg_path, 'urdf', 'slambot.urdf.xacro')
-    controllers_file = os.path.join(bringup_pkg_path, 'config', 'slambot_controllers.yaml')
-    
-    # ADDED: Path to the new twist_mux config
-    twist_mux_file = os.path.join(bringup_pkg_path, 'config', 'twist_mux.yaml')
-    
-    # ADDED: Path for the joystick config
-    joy_config_file = os.path.join(bringup_pkg_path, 'config', 'joy_teleop.yaml')
+    xacro_file = os.path.join(pkg_slambot_description, 'urdf', 'slambot.urdf.xacro')
+    controllers_file = os.path.join(pkg_slambot_bringup, 'config', 'slambot_controllers.yaml')
+    twist_mux_file = os.path.join(pkg_slambot_bringup, 'config', 'twist_mux.yaml')
+    joy_config_file = os.path.join(pkg_slambot_bringup, 'config', 'joy_teleop.yaml')
+    ekf_real_params = os.path.join(pkg_slambot_localization, 'config', 'ekf_real.yaml')
+    ekf_real_params_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced_real.yaml')
 
     # 3. Process URDF
     robot_description_content = Command(
@@ -42,7 +40,41 @@ def generate_launch_description():
         'robot_description': ParameterValue(robot_description_content, value_type=str)
     }
 
-    # --- NODES ---
+
+# ========================= Declare Launch Arguments =========================== #   
+
+    declare_robot_name_cmd = DeclareLaunchArgument(
+        'robot_name',
+        default_value='slambot',
+        description='The name/namespace for the robot'
+    )
+
+    declare_use_sim_time_cmd = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='MUST BE SET TO FALSE FOR REAL ROBOT!'
+    )
+
+    declare_using_namespace_cmd = DeclareLaunchArgument(
+        'using_namespace', 
+        default_value='False',
+        description='Namespaces all topics (best for multiple robot setups) if set to true'
+    )
+    
+    declare_using_localization_cmd = DeclareLaunchArgument(
+        'using_localization',
+        default_value='True', 
+        description='A "True" value is required when using slam or you wont get accurate map'
+    )
+
+    declare_using_joy_cmd = DeclareLaunchArgument(
+        'using_joy',
+        default_value='True',
+        description='launches the joystick teleop nodes if true.'
+    )
+
+
+   # =========================== Start ROS2 Control Nodes ============================= #
 
     # 1. Micro-ROS Agent
     micro_ros_agent = Node(
@@ -61,7 +93,7 @@ def generate_launch_description():
         parameters=[robot_description]
     )
     
-    # 3. Twist Mux Node (loads twist_mux.yaml)
+    # 3. Twist Mux Node
     twist_mux_node = Node(
         package="twist_mux",
         executable="twist_mux",
@@ -69,7 +101,7 @@ def generate_launch_description():
         remappings=[("cmd_vel_out", "/cmd_vel")] 
     )
 
-    # 4. Twist Stamper (listens to twist_mux)
+    # 4. Twist Stamper
     twist_stamper_node = Node(
         package='twist_stamper',
         executable='twist_stamper',
@@ -80,7 +112,7 @@ def generate_launch_description():
         ]
     )
 
-    # 5. Control Node (listens to stamper)
+    # 5. Control Node
     control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
@@ -112,7 +144,6 @@ def generate_launch_description():
         arguments=['imu_sensor_broadcaster', '--controller-manager', '/controller_manager'],
     )
 
-    # Delay spawners to give the controller manager time to load the hardware interface
     delayed_spawners = TimerAction(
         period=3.0,
         actions=[
@@ -122,47 +153,67 @@ def generate_launch_description():
         ]
     )
 
-    # --- ADDED: CONDITIONAL JOYSTICK NODES ---
-    
-    # Create the condition
-    joy_condition = IfCondition(LaunchConfiguration('using_joy'))
 
-    # 7. Start the 'joy' driver node, *if* using_joy is true
+    # =========================== Start Localization (EKF) ============================= #
+    
+    start_ekf_localization_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_slambot_localization, 'launch', 'localization.launch.py')
+        ),
+        launch_arguments={
+            'robot_name': LaunchConfiguration('robot_name'),
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
+            'using_namespace': LaunchConfiguration('using_namespace'),
+            'ekf_param_file': ekf_real_params,
+            'ekf_param_file_namespaced': ekf_real_params_namespaced
+        }.items(),
+        condition=IfCondition(LaunchConfiguration('using_localization'))
+    )
+
+    # ================================================================================== #
+
+    # =================== Launch Teleop Nodes Here =================== #
+
     joy_node = Node(
         package='joy',
         executable='joy_node',
         name='joy_node',
         parameters=[{'dev': '/dev/input/js0'}],
-        condition=joy_condition # <-- This is the magic
+        condition=IfCondition(LaunchConfiguration('using_joy'))
     )
 
-    # 8. Start the 'teleop_twist_joy' node, *if* using_joy is true
     teleop_twist_joy_node = Node(
         package='teleop_twist_joy',
         executable='teleop_node',
         name='teleop_twist_joy_node',
         parameters=[joy_config_file],
-        remappings=[
-            # Remap the output to the topic twist_mux is listening for
-            ('cmd_vel', '/cmd_vel_joy') 
-        ],
-        condition=joy_condition # <-- This is the magic
+        remappings=[('cmd_vel', '/cmd_vel_joy')],
+        condition=IfCondition(LaunchConfiguration('using_joy'))
     )
 
-    # --- RETURN LAUNCH DESCRIPTION ---
-    return LaunchDescription([
-        # Add the new launch argument
-        using_joy_arg,
-        
-        # Add the core robot nodes
-        micro_ros_agent,
-        robot_state_publisher_node,
-        control_node,
-        twist_mux_node,
-        twist_stamper_node,
-        delayed_spawners,
-        
-        # ADDED: Add the new conditional joystick nodes
-        joy_node,
-        teleop_twist_joy_node
-    ])
+
+    # ========================= Create Launch Description ============================ # 
+ 
+    ld = LaunchDescription()
+
+    # Add arguments
+    ld.add_action(declare_robot_name_cmd)
+    ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_using_namespace_cmd)
+    ld.add_action(declare_using_localization_cmd)
+    ld.add_action(declare_using_joy_cmd)
+    
+    # Add Nodes
+    ld.add_action(micro_ros_agent)
+    ld.add_action(robot_state_publisher_node)
+    ld.add_action(twist_mux_node)
+    ld.add_action(twist_stamper_node)
+    ld.add_action(control_node)
+    ld.add_action(delayed_spawners)
+   
+    # Add Logic
+    ld.add_action(start_ekf_localization_cmd)
+    ld.add_action(joy_node)
+    ld.add_action(teleop_twist_joy_node)
+
+    return ld
