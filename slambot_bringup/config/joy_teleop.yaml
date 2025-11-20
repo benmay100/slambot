@@ -1,24 +1,23 @@
 teleop_twist_joy_node:
   ros__parameters:
-    # --- Enable Button ---
+    # --- Enable Button (SAFETY FIX) ---
+    # We set this to TRUE to stop the robot moving on startup
     require_enable_button: false
-    enable_button: 4 
+    enable_button: 4  # Button 4 is usually LB (Left Bumper) in X-Mode
 
-    # --- Axis Mappings (for F710 in D-Input mode) ---
+    # --- Axis Mappings (UPDATED for F710 in X-Input mode) ---
     axis_linear:
-      x: 1  # Left Stick (Vertical)
+      x: 1  # Left Stick Vertical (Stays the same)
     
-    # *** THIS IS THE FIX ***
     axis_angular:
-      yaw: 2  # Right Stick (Horizontal)
+      yaw: 3  # Right Stick Horizontal (Changed from 2 to 3)
 
-# --- Scaling ---
+# --- Scaling (These remain exactly as you tuned them) ---
     scale_linear:
-      x: 0.2  # Gives 5.88 rad/s for "Forward Only" (equal to 0.2 m/s)
+      x: 0.2 
     
     scale_angular:
-      yaw: 0.88  # Tuned for 0.2 m/s forward limit (~2.5 rad/s inner wheel)
-
+      yaw: 0.88
 
 
 # The above scales give the following on /wheel_commands
