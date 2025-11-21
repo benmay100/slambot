@@ -12,16 +12,10 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-	pkg_slambot_gazebo = get_package_share_directory('slambot_gazebo')
+	pkg_slambot_bringup = get_package_share_directory('slambot_bringup')
 
-	rviz_config_path = os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config.rviz')
-	rviz_config_path_namespaced = os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_config_namespaced.rviz')
-	rviz_config_path_localization = os.path.join(pkg_slambot_gazebo, 'rviz', 'gazebo_and_rviz_and_localization_config.rviz')
-	rviz_config_path_localization_namespaced = os.path.join(
-		pkg_slambot_gazebo,
-		'rviz',
-		'gazebo_and_rviz_and_localization_config_namespaced.rviz'
-	)
+	rviz_config_path = os.path.join(pkg_slambot_bringup, 'rviz', 'gazebo_and_rviz_config.rviz')
+	rviz_config_path_namespaced = os.path.join(pkg_slambot_bringup, 'rviz', 'gazebo_and_rviz_config_namespaced.rviz')
 
 	declare_robot_name_cmd = DeclareLaunchArgument(
 		'robot_name',
@@ -50,16 +44,6 @@ def generate_launch_description():
 	declare_rviz_config_file_cmd = DeclareLaunchArgument(
 		'rviz_config_file',
 		default_value=PythonExpression([
-			"('",
-			rviz_config_path_localization_namespaced,
-			"' if '",
-			LaunchConfiguration('using_namespace'),
-			"'.lower() == 'true' else '",
-			rviz_config_path_localization,
-			"')",
-			" if '",
-			LaunchConfiguration('using_localization'),
-			"'.lower() == 'true' else ",
 			"('",
 			rviz_config_path_namespaced,
 			"' if '",
@@ -99,13 +83,6 @@ def generate_launch_description():
 		]
 	)
 
-	rqt_image_view_node = Node(
-		package='rqt_image_view',
-		executable='rqt_image_view',
-		name='rqt_image_view',
-		output='screen'
-	)
-
 	ld = LaunchDescription()
 	ld.add_action(declare_robot_name_cmd)
 	ld.add_action(declare_use_sim_time_cmd)
@@ -114,6 +91,5 @@ def generate_launch_description():
 	ld.add_action(declare_rviz_config_file_cmd)
 	ld.add_action(rviz_node)
 	ld.add_action(rviz_node_namespaced)
-	ld.add_action(rqt_image_view_node)
 
 	return ld
