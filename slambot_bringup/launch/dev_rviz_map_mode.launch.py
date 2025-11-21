@@ -17,7 +17,7 @@ def generate_launch_description():
 	pkg_slambot_slam = get_package_share_directory('slambot_slam')
 
 	# File paths
-	rviz_config_path = os.path.join(pkg_slambot_bringup, 'rviz', 'dev_rviz_teleop_config.rviz')
+	rviz_config_path = os.path.join(pkg_slambot_bringup, 'rviz', 'dev_rviz_map_config.rviz')
 
 
 	declare_robot_name_cmd = DeclareLaunchArgument(
