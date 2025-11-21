@@ -36,11 +36,12 @@
   gz_type_name: "gz.msgs.Twist"
   direction: ROS_TO_GZ
 
-- ros_topic_name: "/tf"  #gz topic published by DiffDrive plugin
-  gz_topic_name: "/tf"
-  ros_type_name: "tf2_msgs/msg/TFMessage"
-  gz_type_name: "gz.msgs.Pose_V"
-  direction: GZ_TO_ROS
+# Removed, as we are using a localization (ekf) node to handle all publishing to /tf topics
+# - ros_topic_name: "/tf"  #gz topic published by DiffDrive plugin
+#   gz_topic_name: "/tf"
+#   ros_type_name: "tf2_msgs/msg/TFMessage"
+#   gz_type_name: "gz.msgs.Pose_V"
+#   direction: GZ_TO_ROS
 
 - ros_topic_name: "/odom" #gz topic published by DiffDrive plugin
   gz_topic_name: "/odom"
@@ -56,12 +57,7 @@
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
   direction: GZ_TO_ROS
-  # REPLACE 'lazy: false' with this block to fix the QoS mismatch
-  qos_overrides:
-    reliability: best_effort
-    durability: volatile
-    history: keep_last
-    depth: 5
+  lazy: false
 
 #Used for camera
 - ros_topic_name: "/camera/camera_info"

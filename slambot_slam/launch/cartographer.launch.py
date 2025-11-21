@@ -12,8 +12,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
@@ -52,21 +51,8 @@ def generate_launch_description():
         description='Full path to the .lua configuration file for Cartographer'
     )
     
-    # This argument allows the parent launch file to specify the robot's namespace
-    declare_robot_name_cmd = DeclareLaunchArgument(
-        'robot_name',
-        default_value='slambot',
-        description='The namespace of the robot'
-    )
 
-    # This argument allows the parent launch file to specify the robot's namespace
-    declare_using_namespace_cmd = DeclareLaunchArgument(
-        'using_namespace',
-        default_value='False',
-        description='If set to true it launches cartographer with namespaced topics'
-    )
-
-    # =================== Cartographer Node (Non-Namespaced) =================== #
+    # =================== Cartographer Node =================== #
     
     start_cartographer_node = Node(
         package='cartographer_ros',
@@ -82,35 +68,10 @@ def generate_launch_description():
         remappings=[
             ('odom', 'odometry/filtered') # Critical, as we're using an ekf node which takes the raw /odom and raw /imu/data topics, filters them and republishes to /odometry/filtered we MUST remap the '/odom' topic when launching cartographer!
         ],
-        # Condition remains: launch if 'using_namespace' is False
-        condition=IfCondition(PythonExpression(['not ', LaunchConfiguration('using_namespace')]))
     )
 
-
-    # =================== Cartographer Node (Namespaced) =================== #
-    start_cartographer_node_namespaced = Node(
-        package='cartographer_ros',
-        executable='cartographer_node',
-        name='cartographer_node',
-        namespace=LaunchConfiguration('robot_name'), 
-        output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
-        arguments=[
-            '-configuration_directory', LaunchConfiguration('configuration_directory'),
-            '-configuration_basename', LaunchConfiguration('cartographer_config_file')
-        ],
-        # REVISED REMAPPING: If the node is in namespace /slambot, it looks for /slambot/scan. 
-    remappings=[
-        ('odom', 'odometry/filtered'), # Critical, as we're using an ekf node which takes the raw /odom and raw /imu/data topics, filters them and republishes to /odometry/filtered we MUST remap the '/odom' topic when launching cartographer!
-        ('/scan', 'scan'), #Force cartographer to subscribe to a namespaced version of this topic
-        ('/tf', 'tf'),# Force Cartographer to publish its TFs to the namespaced topics
-        ('/tf_static', 'tf_static')# Force Cartographer to publish its TFs to the namespaced topics
-        ],
-        # Condition remains: launch if 'using_namespace' is True
-        condition=IfCondition(PythonExpression([' ', LaunchConfiguration('using_namespace')]))
-    )
     
-    # =================== Cartographer Occupancy Grid Node (Non-Namespaced) =================== #
+    # =================== Cartographer Occupancy Grid Node  =================== #
     
     start_occupancy_grid_node = Node(
         package='cartographer_ros',
@@ -123,22 +84,6 @@ def generate_launch_description():
             '-resolution', '0.05',
             '-publish_period_sec', '1.0'
         ],
-        condition=IfCondition(PythonExpression(['not ', LaunchConfiguration('using_namespace')]))
-    )
-
-    # =================== Cartographer Occupancy Grid Node (Namespaced) =================== #
-    start_occupancy_grid_node_namespaced = Node(
-        package='cartographer_ros',
-        executable='cartographer_occupancy_grid_node', # <--- FIXED EXECUTABLE NAME
-        name='occupancy_grid_node',
-        namespace=LaunchConfiguration('robot_name'),
-        output='screen',
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
-        arguments=[
-            '-resolution', '0.05',
-            '-publish_period_sec', '1.0'
-        ],
-        condition=IfCondition(PythonExpression([' ', LaunchConfiguration('using_namespace')]))
     )
 
 
@@ -150,14 +95,9 @@ def generate_launch_description():
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_cartographer_config_file_cmd)
     ld.add_action(declare_configuration_directory_cmd)
-    ld.add_action(declare_robot_name_cmd)
-    ld.add_action(declare_using_namespace_cmd)
 
     # Add the Cartographer nodes to the launch description
     ld.add_action(start_cartographer_node)
-    ld.add_action(start_cartographer_node_namespaced)
     ld.add_action(start_occupancy_grid_node)
-    ld.add_action(start_occupancy_grid_node_namespaced)
-
 
     return ld

@@ -39,12 +39,6 @@ def generate_launch_description():
         description='Full path to the ROS2 parameters file to use for the slam_toolbox node'
     )
 
-    # This argument allows the parent launch file to specify the robot's namespace
-    declare_robot_name_cmd = DeclareLaunchArgument(
-        'robot_name',
-        default_value='slambot',
-        description='The namespace of the robot'
-    )
 
     # =================== SLAM Toolbox Node =================== #
 
@@ -101,7 +95,6 @@ def generate_launch_description():
     # Add the launch arguments to the launch description
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_slam_params_file_cmd)
-    ld.add_action(declare_robot_name_cmd)
 
     # Add the slam_toolbox node to the launch description
     ld.add_action(start_slam_toolbox_node)

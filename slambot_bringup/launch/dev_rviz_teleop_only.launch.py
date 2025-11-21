@@ -6,7 +6,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
@@ -18,22 +18,11 @@ def generate_launch_description():
 	# File paths
 	rviz_config_path = os.path.join(pkg_slambot_bringup, 'rviz', 'dev_rviz_teleop_config.rviz')
 
-	declare_robot_name_cmd = DeclareLaunchArgument(
-		'robot_name',
-		default_value='slambot',
-		description='Name/namespace used by the real robot.'
-	)
 
 	declare_use_sim_time_cmd = DeclareLaunchArgument(
 		'use_sim_time',
 		default_value='false',
 		description='Set to true only when replaying bags with simulated time.'
-	)
-
-	declare_using_localization_cmd = DeclareLaunchArgument(
-		'using_localization',
-		default_value='True',
-		description='Select RViz panels that expect localization outputs.'
 	)
 
 	rviz_node = Node(
@@ -47,9 +36,7 @@ def generate_launch_description():
 
 
 	ld = LaunchDescription()
-	ld.add_action(declare_robot_name_cmd)
 	ld.add_action(declare_use_sim_time_cmd)
-	ld.add_action(declare_using_localization_cmd)
 	ld.add_action(rviz_node)
 
 	return ld

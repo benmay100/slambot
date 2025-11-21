@@ -11,15 +11,12 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
-from launch.conditions import IfCondition
+
 
 def generate_launch_description():
     """Generate the launch description to save the map."""
-
-    # Get the path to the slambot_slam package's share directory
-    pkg_slambot_slam = get_package_share_directory('slambot_slam')
 
     # --- New Launch Argument for Map Save Directory ---
     # We will use this to save to a *writable* path like the source directory.
@@ -37,18 +34,6 @@ def generate_launch_description():
         description='The name of the map file to save (without extension)'
     )
 
-    # This argument allows us to specify which robot's map to save
-    declare_robot_name_cmd = DeclareLaunchArgument(
-        'robot_name',
-        default_value='slambot',
-        description='The namespace of the robot to save the map from'
-    )
-
-    declare_using_namespace_cmd = DeclareLaunchArgument(
-        'using_namespace', 
-        default_value='False',
-        description='Namespaces the /map topic if set to true'
-    )
 
     # Construct the full path where the map file will be saved
     # NOW we use the LaunchConfiguration('map_save_dir') for the base path
@@ -69,20 +54,6 @@ def generate_launch_description():
             '-f', map_file_path
         ],
         parameters=[{'use_sim_time': True}], # Important for simulation environments
-        condition=IfCondition(PythonExpression(['not ', LaunchConfiguration('using_namespace')]))
-    )
-
-    save_map_node_namespaced = Node(
-        package='nav2_map_server',
-        executable='map_saver_cli',
-        output='screen',
-        arguments=[
-            # Construct the namespaced topic, e.g., '/slambot/map'
-            '-t', [LaunchConfiguration('robot_name'), '/map'],
-            '-f', map_file_path
-        ],
-        parameters=[{'use_sim_time': True}], # Important for simulation environments
-        condition=IfCondition(PythonExpression([' ', LaunchConfiguration('using_namespace')]))
     )
 
 
@@ -92,10 +63,7 @@ def generate_launch_description():
     # Add the declared arguments and the node to the launch description
     ld.add_action(declare_save_dir_cmd)
     ld.add_action(declare_map_name_cmd)
-    ld.add_action(declare_robot_name_cmd)
-    ld.add_action(declare_using_namespace_cmd)
     ld.add_action(save_map_node)
-    ld.add_action(save_map_node_namespaced)
 
     return ld
 

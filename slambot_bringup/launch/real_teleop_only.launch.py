@@ -1,6 +1,5 @@
 """
 Top-level launch file to start the REAL robot with teleoperation, localization and EKF sensor fusion (no SLAM or Nav2)
-You can launch with or without a namespaced environment
 
 """
 
@@ -32,7 +31,6 @@ def generate_launch_description():
     twist_mux_file = os.path.join(pkg_slambot_bringup, 'config', 'twist_mux.yaml')
     joy_config_file = os.path.join(pkg_slambot_bringup, 'config', 'joy_teleop.yaml')
     ekf_real_params = os.path.join(pkg_slambot_localization, 'config', 'ekf_real.yaml')
-    ekf_real_params_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced_real.yaml')
     camera_config_file = os.path.join(pkg_slambot_bringup, 'config', 'camera.yaml')
 
 
@@ -47,28 +45,11 @@ def generate_launch_description():
 
 # ========================= Declare Launch Arguments =========================== #   
 
-    declare_robot_name_cmd = DeclareLaunchArgument(
-        'robot_name',
-        default_value='slambot',
-        description='The name/namespace for the robot'
-    )
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='false',
         description='MUST BE SET TO FALSE FOR REAL ROBOT!'
-    )
-
-    declare_using_namespace_cmd = DeclareLaunchArgument(
-        'using_namespace', 
-        default_value='False',
-        description='Namespaces all topics (best for multiple robot setups) if set to true'
-    )
-    
-    declare_using_localization_cmd = DeclareLaunchArgument(
-        'using_localization',
-        default_value='True', 
-        description='A "True" value is required when using slam or you wont get accurate map'
     )
 
     declare_using_joy_cmd = DeclareLaunchArgument(
@@ -182,13 +163,9 @@ def generate_launch_description():
             os.path.join(pkg_slambot_localization, 'launch', 'localization.launch.py')
         ),
         launch_arguments={
-            'robot_name': LaunchConfiguration('robot_name'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
-            'using_namespace': LaunchConfiguration('using_namespace'),
             'ekf_param_file': ekf_real_params,
-            'ekf_param_file_namespaced': ekf_real_params_namespaced
         }.items(),
-        condition=IfCondition(LaunchConfiguration('using_localization'))
     )
 
     # ================================================================================== #
@@ -218,10 +195,7 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     # Add arguments
-    ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_using_namespace_cmd)
-    ld.add_action(declare_using_localization_cmd)
     ld.add_action(declare_using_joy_cmd)
     
     # Add Nodes

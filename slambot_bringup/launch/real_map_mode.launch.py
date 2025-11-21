@@ -3,7 +3,6 @@
 Top-level launch file to start the REAL robot with SLAM, localization and EKF sensor fusion.
 You can choose which version of slam you want to use 'cartographer_ros' or 'slam_toolbox'....
 ...depending on preference and which works best in the environment you're mapping
-You can launch with or without a namespaced environment
 
 """
 
@@ -36,8 +35,8 @@ def generate_launch_description():
     twist_mux_file = os.path.join(pkg_slambot_bringup, 'config', 'twist_mux.yaml') 
     joy_config_file = os.path.join(pkg_slambot_bringup, 'config', 'joy_teleop.yaml') 
     ekf_real_params = os.path.join(pkg_slambot_localization, 'config', 'ekf_real.yaml')
-    ekf_real_params_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced_real.yaml')
     camera_config_file = os.path.join(pkg_slambot_bringup, 'config', 'camera.yaml')
+    slam_params_file = os.path.join(pkg_slambot_slam, 'config', 'slam_params.yaml')
 
     # 3. Process URDF
     robot_description_content = Command(
@@ -49,33 +48,16 @@ def generate_launch_description():
 
     # ========================= Declare Launch Arguments =========================== #   
 
-    declare_robot_name_cmd = DeclareLaunchArgument(
-        'robot_name',
-        default_value='slambot',
-        description='The name/namespace for the robot'
-    )
-
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='false',
         description='MUST BE SET TO FALSE FOR REAL ROBOT!'
     )
 
-    declare_using_namespace_cmd = DeclareLaunchArgument(
-        'using_namespace', 
-        default_value='False',
-        description='Namespaces all topics (best for multiple robot setups) if set to true'
-    )
-    
-    declare_using_localization_cmd = DeclareLaunchArgument(
-        'using_localization',
-        default_value='True', 
-        description='A "True" value is required when using slam or you wont get accurate map'
-    )
-
+    # In case you need to pass a different parameter file through to SLAM for the real robot!
     declare_slam_params_file_cmd = DeclareLaunchArgument(
         'slam_params_file',
-        default_value=os.path.join(pkg_slambot_slam, 'config', 'slam_params.yaml'),
+        default_value=slam_params_file,
         description='Full path to the ROS2 parameters file for SLAM'
     )
 
@@ -91,17 +73,20 @@ def generate_launch_description():
         description='launches the joystick teleop nodes if true.'
     )
 
+    # In case you need to pass a different parameter file through to SLAM for the real robot!
     declare_configuration_directory_cmd = DeclareLaunchArgument(
         'configuration_directory',
         default_value=os.path.join(pkg_slambot_slam, 'config'),
         description='Directory containing the Cartographer .lua configuration file'
     )
 
+    # In case you need to pass a different parameter file through to SLAM for the real robot!
     declare_cartographer_config_file_cmd = DeclareLaunchArgument(
         'cartographer_config_file',
         default_value='cartographer_params.lua',
         description='Full path to the .lua configuration file for Cartographer'
     )
+
 
     # =========================== Start ROS2 Control Nodes ============================= #
 
@@ -207,13 +192,9 @@ def generate_launch_description():
             os.path.join(pkg_slambot_localization, 'launch', 'localization.launch.py')
         ),
         launch_arguments={
-            'robot_name': LaunchConfiguration('robot_name'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
-            'using_namespace': LaunchConfiguration('using_namespace'),
             'ekf_param_file': ekf_real_params,
-            'ekf_param_file_namespaced': ekf_real_params_namespaced
         }.items(),
-        condition=IfCondition(LaunchConfiguration('using_localization'))
     )
 
     # ================================================================================== #
@@ -226,26 +207,11 @@ def generate_launch_description():
             os.path.join(pkg_slambot_slam, 'launch', 'slam.launch.py')
         ),
         launch_arguments={
-            'robot_name': LaunchConfiguration('robot_name'),
             'use_sim_time': LaunchConfiguration('use_sim_time'),
+            'slam_params_file': LaunchConfiguration('slam_params_file'),
         }.items(),
         condition=IfCondition(PythonExpression([
-            "'", LaunchConfiguration('slam_type'), "'.lower() == 'slamtoolbox' and '",
-            LaunchConfiguration('using_namespace'), "'.lower() != 'true'"
-        ]))
-    )
-
-    start_slam_cmd_namespaced = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_slambot_slam, 'launch', 'slam_namespaced.launch.py')
-        ),
-        launch_arguments={
-            'robot_name': LaunchConfiguration('robot_name'),
-            'use_sim_time': LaunchConfiguration('use_sim_time'),
-        }.items(),
-        condition=IfCondition(PythonExpression([
-            "'", LaunchConfiguration('slam_type'), "'.lower() == 'slamtoolbox' and '",
-            LaunchConfiguration('using_namespace'), "'.lower() == 'true'"
+            "'", LaunchConfiguration('slam_type'), "'.lower() == 'slamtoolbox'"
         ]))
     )
     
@@ -256,10 +222,8 @@ def generate_launch_description():
             os.path.join(pkg_slambot_slam, 'launch', 'cartographer.launch.py')
         ),
         launch_arguments={
-            'robot_name': LaunchConfiguration('robot_name'),
             'cartographer_config_file': LaunchConfiguration('cartographer_config_file'),
             'configuration_directory': LaunchConfiguration('configuration_directory'), 
-            'using_namespace': LaunchConfiguration('using_namespace'),
             'use_sim_time': LaunchConfiguration('use_sim_time')
         }.items(),
         condition=IfCondition(PythonExpression([
@@ -291,10 +255,7 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     # Add arguments
-    ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_using_namespace_cmd)
-    ld.add_action(declare_using_localization_cmd)
     ld.add_action(declare_slam_params_file_cmd)
     ld.add_action(declare_slam_type_cmd)
     ld.add_action(declare_configuration_directory_cmd)
@@ -316,7 +277,6 @@ def generate_launch_description():
     # Add Logic
     ld.add_action(start_ekf_localization_cmd)
     ld.add_action(start_slam_cmd)
-    ld.add_action(start_slam_cmd_namespaced)
     ld.add_action(start_cartographer_cmd)
     ld.add_action(joy_node)
     ld.add_action(teleop_twist_joy_node)
