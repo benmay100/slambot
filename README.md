@@ -8,7 +8,6 @@ A Custom Autonomous Mapping & Navigation Robot (Slambot) Which Can Be Run In Rea
 * The robot can be teleoperated (ideally using a Logitech F710 controller or similar)
 * The robot can be launched into a slam_toolbox or ros_cartographer (your choice!) environment for creating maps
 * The robot can then be launched into a Nav2 environment and will navigate to destinations sucessfully via RVIZ. 
-* The package is designed so that all functionalities can be used in a namespaced or non-namespaced environment depending on the user's desire.
 * The package is also fully capable of operating a real robot, if you want the CAD files and instructions to create the robot visit www.benmay.co.uk/portfolio-slambot-real
 
 ...Enjoy!
