@@ -33,12 +33,6 @@ def generate_launch_description():
 		description='Set to true only when replaying bags with simulated time.'
 	)
 
-	declare_using_namespace_cmd = DeclareLaunchArgument(
-		'using_namespace',
-		default_value='False',
-		description='Match the namespace setting used on the robot.'
-	)
-
 	declare_slam_type_cmd = DeclareLaunchArgument(
 		'slam_type',
 		default_value='slamtoolbox',
@@ -61,9 +55,7 @@ def generate_launch_description():
 	ld = LaunchDescription()
 	ld.add_action(declare_robot_name_cmd)
 	ld.add_action(declare_use_sim_time_cmd)
-	ld.add_action(declare_using_namespace_cmd)
 	ld.add_action(declare_slam_type_cmd)
 	ld.add_action(rviz_node)
-	ld.add_action(rviz_node_namespaced)
 
 	return ld
