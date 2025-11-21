@@ -1,6 +1,6 @@
 # Slambot
 
-A Custom Autonomous Mapping & Navigation Robot (Slambot) Which Can Be Run In Real Life And In Sim...
+A Custom Autonomous Mapping & Navigation Robot (Slambot) Which Can Be Run In Real Life And In Simulation.
 
 * A slam-enabled, Nav2 enabled, four-wheeled diff-drive robot. 
 * The robot has four Motors (with encoders), a Lidar, Camera, and an IMU sensor. 
