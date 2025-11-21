@@ -1,0 +1,7 @@
+camera:
+  ros__parameters:
+    camera: 0              # You confirmed it is in port cam0
+    width: 640             # 640x480 is ideal for SLAM (balance of speed/quality)
+    height: 480
+    format: "YUYV"         # Faster than RGB for the pi to process
+    frame_id: "camera_link" # IMPORTANT: Must match the link name in your URDF

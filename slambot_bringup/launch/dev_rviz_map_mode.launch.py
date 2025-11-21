@@ -113,6 +113,13 @@ def generate_launch_description():
 		]
 	)
 
+	rqt_image_view_node = Node(
+		package='rqt_image_view',
+		executable='rqt_image_view',
+		name='rqt_image_view',
+		output='screen'
+	)
+
 	ld = LaunchDescription()
 	ld.add_action(declare_robot_name_cmd)
 	ld.add_action(declare_use_sim_time_cmd)
@@ -121,5 +128,6 @@ def generate_launch_description():
 	ld.add_action(declare_rviz_config_file_cmd)
 	ld.add_action(rviz_node)
 	ld.add_action(rviz_node_namespaced)
+	ld.add_action(rqt_image_view_node)
 
 	return ld

@@ -23,6 +23,8 @@ def generate_launch_description():
     pkg_slambot_description = get_package_share_directory('slambot_description')
     pkg_slambot_bringup = get_package_share_directory('slambot_bringup')
     pkg_slambot_localization = get_package_share_directory('slambot_localization')
+    pkg_ldlidar_ros2 = get_package_share_directory('ldlidar_ros2')
+
     
     # 2. Define file paths
     xacro_file = os.path.join(pkg_slambot_description, 'urdf', 'slambot.urdf.xacro')
@@ -31,6 +33,8 @@ def generate_launch_description():
     joy_config_file = os.path.join(pkg_slambot_bringup, 'config', 'joy_teleop.yaml')
     ekf_real_params = os.path.join(pkg_slambot_localization, 'config', 'ekf_real.yaml')
     ekf_real_params_namespaced = os.path.join(pkg_slambot_localization, 'config', 'ekf_namespaced_real.yaml')
+    camera_config_file = os.path.join(pkg_slambot_bringup, 'config', 'camera.yaml')
+
 
     # 3. Process URDF
     robot_description_content = Command(
@@ -153,6 +157,23 @@ def generate_launch_description():
         ]
     )
 
+    # =========================== Start Sensors ============================= #
+    
+    start_lidar_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_ldlidar_ros2, 'launch', 'ld06.launch.py')
+        )
+    )
+
+    camera_node = Node(
+        package='camera_ros',
+        executable='camera_node',
+        name='camera',
+        output='screen',
+        parameters=[camera_config_file]
+    )
+
+    # ======================================================================= #
 
     # =========================== Start Localization (EKF) ============================= #
     
@@ -210,6 +231,10 @@ def generate_launch_description():
     ld.add_action(twist_stamper_node)
     ld.add_action(control_node)
     ld.add_action(delayed_spawners)
+
+    # Add Sensor Launch
+    ld.add_action(start_lidar_cmd)
+    ld.add_action(camera_node)
    
     # Add Logic
     ld.add_action(start_ekf_localization_cmd)
