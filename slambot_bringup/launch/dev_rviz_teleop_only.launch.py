@@ -14,8 +14,8 @@ from launch_ros.actions import Node
 def generate_launch_description():
 	pkg_slambot_bringup = get_package_share_directory('slambot_bringup')
 
-	rviz_config_path = os.path.join(pkg_slambot_bringup, 'rviz', 'gazebo_and_rviz_config.rviz')
-	rviz_config_path_namespaced = os.path.join(pkg_slambot_bringup, 'rviz', 'gazebo_and_rviz_config_namespaced.rviz')
+	rviz_config_path = os.path.join(pkg_slambot_bringup, 'rviz', 'dev_rviz_teleop_config.rviz')
+	rviz_config_path_namespaced = os.path.join(pkg_slambot_bringup, 'rviz', 'dev_rviz_teleop_config_namespaced.rviz')
 
 	declare_robot_name_cmd = DeclareLaunchArgument(
 		'robot_name',
