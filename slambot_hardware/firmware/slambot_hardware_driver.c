@@ -25,6 +25,7 @@
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 #include <rmw_microros/rmw_microros.h>
+#include <rmw_microros/time_sync.h>
 
 #include <std_msgs/msg/string.h>
 #include <std_msgs/msg/float32_multi_array.h>
@@ -50,7 +51,7 @@
 #define WHEEL_STATE_PUBLISH_MS 100U
 #define IMU_PUBLISH_MS 50U
 #define TICK_PUBLISH_MS 250U
-#define AGENT_CONNECT_TIMEOUT_MS 300000U /* 5 minutes to allow for time-syncing before latching */
+#define AGENT_CONNECT_TIMEOUT_MS 60000U
 #define COMMAND_TIMEOUT_MS 1000U
 
 /* Velocity estimation and PID behaviour tuning */
@@ -789,6 +790,25 @@ static void publish_wheel_state(void) {
 }
 
 /* Read the IMU and publish ROS-standard orientation, angular velocity, and acceleration */
+/* To prevent a big odom jump we must ensure the pico publishes /imu/data_raw with time stamps that match the Pi. If not the Pico can publish time stamps like sec: 404, so robot_localization fuses wheel odom at real epoch (~1 763 988 xxx s) with IMU measurements that look 55 years in the past. The EKF blows up its state (big Y, giant covariance) as soon as it sees those out-of-era IMU updates.
+So below we call rmw_uros_sync_session() (up to five retries) before using rmw_uros_epoch_nanos(). If we can’t sync yet, the IMU publish simply skips that cycle. This guarantees IMU timestamps track the Pi’s clock once the agent is up.*/
+static bool ensure_time_synced(void) {
+    static bool synced = false;
+    if (synced) {
+        return true;
+    }
+
+    for (int attempt = 0; attempt < 5; ++attempt) {
+        if (rmw_uros_sync_session(1000) == RCL_RET_OK) {
+            synced = true;
+            return true;
+        }
+        sleep_ms(50);
+    }
+
+    return false;
+}
+
 static void publish_imu_state(void) {
     bno055_imu_sample_t sample = {0};
     if (!bno055_imu_read(&imu_sensor, &sample)) {
@@ -808,7 +828,14 @@ static void publish_imu_state(void) {
     imu_msg.linear_acceleration.y = sample.linear_acceleration_y;
     imu_msg.linear_acceleration.z = sample.linear_acceleration_z;
 
+    if (!ensure_time_synced()) {
+        return;
+    }
+
     int64_t time_ns = rmw_uros_epoch_nanos();
+    if (time_ns <= 0) {
+        return;
+    }
     imu_msg.header.stamp.sec = (int32_t)(time_ns / 1000000000LL);
     imu_msg.header.stamp.nanosec = (uint32_t)(time_ns % 1000000000LL);
 
