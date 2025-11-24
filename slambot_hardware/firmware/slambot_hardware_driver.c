@@ -50,7 +50,7 @@
 #define WHEEL_STATE_PUBLISH_MS 100U
 #define IMU_PUBLISH_MS 50U
 #define TICK_PUBLISH_MS 250U
-#define AGENT_CONNECT_TIMEOUT_MS 60000U
+#define AGENT_CONNECT_TIMEOUT_MS 300000U /* 5 minutes to allow for time-syncing before latching */
 #define COMMAND_TIMEOUT_MS 1000U
 
 /* Velocity estimation and PID behaviour tuning */
