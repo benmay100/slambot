@@ -15,7 +15,7 @@ def generate_launch_description():
     
     # 2. File paths
     map_file_path = os.path.join(slambot_navigation_dir, 'maps', 'indoor_map_cartographer.yaml')
-    params_file_path = os.path.join(slambot_navigation_dir, 'config', 'nav2_custom_params.yaml')
+    params_file_path = os.path.join(slambot_navigation_dir, 'config', 'nav2_sim_params.yaml') # <-- Use sim params for Gazebo by default
 
 
     # 3. Declare the launch arguments

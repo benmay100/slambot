@@ -68,7 +68,7 @@ def generate_launch_description():
 
     declare_nav_params_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(pkg_slambot_nav2, 'config', 'nav2_custom_params.yaml'),
+        default_value=os.path.join(pkg_slambot_nav2, 'config', 'nav2_real_params.yaml'), #Makes sure to send into Nav the 'real' params file, not the sim one
         description='Full path to the navigation parameters file to load'
     )
 

@@ -2,7 +2,7 @@ teleop_twist_joy_node:
   ros__parameters:
     # --- Enable Button (SAFETY FIX) ---
     # We set this to TRUE to stop the robot moving on startup
-    require_enable_button: false
+    require_enable_button: true
     enable_button: 4  # Button 4 is usually LB (Left Bumper) in X-Mode
 
     # --- Axis Mappings (UPDATED for F710 in X-Input mode) ---
