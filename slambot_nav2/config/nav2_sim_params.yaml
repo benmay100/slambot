@@ -247,8 +247,8 @@ local_costmap:
       height: 3
       resolution: 0.05
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
-      #This polygon represents a 0.19m long by 0.12m wide rectangle, centered at base_footprint
-      footprint: "[ [0.095, 0.06], [0.095, -0.06], [-0.095, -0.06], [-0.095, 0.06] ]"      
+      #This polygon represents a 0.23m long by 0.22m wide rectangle (including the wheels!), centered at base_footprint
+      footprint: "[ [0.115, 0.11], [0.115, -0.11], [-0.115, -0.11], [-0.115, 0.11] ]"         
       #robot_radius: 0.07 -- Don't use if using polygon footprint!
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
@@ -296,8 +296,8 @@ global_costmap:
       publish_frequency: 5.0 #Changed from 1.0 to 5.0
       global_frame: map
       robot_base_frame: "base_footprint"
-      #This polygon represents a 0.19m long by 0.12m wide rectangle, centered at base_footprint
-      footprint: "[ [0.095, 0.06], [0.095, -0.06], [-0.095, -0.06], [-0.095, 0.06] ]"      
+      #This polygon represents a 0.23m long by 0.22m wide rectangle (including the wheels!), centered at base_footprint
+      footprint: "[ [0.115, 0.11], [0.115, -0.11], [-0.115, -0.11], [-0.115, 0.11] ]"      
       #robot_radius: 0.07 -- Don't use if using polygon footprint!
       resolution: 0.05
       track_unknown_space: true

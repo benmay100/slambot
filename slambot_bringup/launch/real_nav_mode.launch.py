@@ -161,13 +161,14 @@ def generate_launch_description():
         )
     )
 
-    camera_node = Node(
-        package='camera_ros',
-        executable='camera_node',
-        name='camera',
-        output='screen',
-        parameters=[camera_config_file]
-    )
+    # Note needed for Nav2, and better to leave out to reduce CPU load on the real robot
+    # camera_node = Node(
+    #     package='camera_ros',
+    #     executable='camera_node',
+    #     name='camera',
+    #     output='screen',
+    #     parameters=[camera_config_file]
+    # )
 
     # ======================================================================= #
 
@@ -198,6 +199,24 @@ def generate_launch_description():
             'map': LaunchConfiguration('map'),
             'params_file': LaunchConfiguration('params_file'),
         }.items()
+    )
+
+    cmd_vel_watchdog_node = Node(
+        package='slambot_nav2',
+        executable='cmd_vel_watchdog',
+        name='cmd_vel_watchdog',
+        output='screen',
+        parameters=[{
+            'cmd_vel_topic': '/cmd_vel_nav',
+            'status_topics': [
+                '/navigate_to_pose/_action/status',
+                '/navigate_through_poses/_action/status'
+            ],
+            'linear_threshold': 0.01,
+            'angular_threshold': 0.01,
+            'hold_stop_duration': 0.75,
+            'log_throttle_seconds': 2.0,
+        }]
     )
 
     # ================================================================================ # 
@@ -239,10 +258,11 @@ def generate_launch_description():
     ld.add_action(control_node)
     ld.add_action(delayed_spawners)
     ld.add_action(start_nav2_cmd)
+    ld.add_action(cmd_vel_watchdog_node)
     
     # Add Sensor Launch
     ld.add_action(start_lidar_cmd)
-    ld.add_action(camera_node)
+    # ld.add_action(camera_node)
     
     # Add Logic
     ld.add_action(start_ekf_localization_cmd)
