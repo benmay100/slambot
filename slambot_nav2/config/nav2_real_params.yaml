@@ -142,8 +142,8 @@ controller_server:
     goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.10 #Set to 0.10m for real robot (was 0.25m for simulation)
-      yaw_goal_tolerance: 0.40 #Set to 0.40rad for real robot (was 0.25rad for simulation)
+      xy_goal_tolerance: 0.15 #Set to 0.15m for real robot (was 0.25m for simulation)
+      yaw_goal_tolerance: 0.35 #Set to 0.35rad for real robot (was 0.25rad for simulation)
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 40 #Reduced for real robot to reduce computation load (down from 56)
