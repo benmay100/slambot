@@ -62,7 +62,7 @@ def generate_launch_description():
 
     declare_map_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(pkg_slambot_slam, 'maps', 'campion_top_floor.yaml'),
+        default_value=os.path.join(pkg_slambot_slam, 'maps', 'campion_bedroom_2.yaml'),
         description='Full path to the map file to load for navigation'
     )
 
