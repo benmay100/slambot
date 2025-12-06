@@ -132,13 +132,18 @@ Up to you, but suggest using these credentials as these will match the config fi
 mkdir -p ~/slambot_pi_ws/src
 cd /slambot_pi_ws/src
 git clone https://github.com/benmay100/slambot.git
+
+# NOW DELETE THE UNNECESSARY DIRECTORIES...
+
+rm -rf /docs /firmware /hardware
+
+# NOW ROSDEP INSTALL AND BUILD...
+
 cd /slambot_pi_ws
 rosdep install --from-paths src --ignore-src -r -y
 colcon build
 
-# Optional, but recommended: If you want to remove unwanted folders from the Pi...
 
-rm -rf /docs /firmware /hardware
 ```
 
 ### Step 5: Create an additional directory in the Pi, and set up the Lidar Module
