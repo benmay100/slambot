@@ -15,7 +15,7 @@ A Custom Autonomous Mapping & Navigation Robot (Slambot) Which Can Be Run In Rea
 ___
 
 # Getting Started... (Dev Machine)
-Up to you, but this is the suggested structure (NOTE: The 'ldlidar_ws' directory is only needed on the RaspberryPi, not the dev machine)
+Below is the suggested file structure, you can of course use your own, but bear in mind rest of the intsructions below are assuming you've used this file structure.
 
 ```python
 mkdir -p ~/robot_project/slambot_ws/src
