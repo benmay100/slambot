@@ -1,0 +1,22 @@
+[Unit]
+Description=Robot Boot Mode Selector
+Wants=network-online.target
+After=network.target network-online.target time-sync.target
+
+[Service]
+Type=simple
+# CHANGED: Updated to your specific user
+User=slambot-rpi
+Environment="DISPLAY=:0"
+# CHANGED: Updated to your specific home directory
+Environment="HOME=/home/slambot-rpi"
+# ADDED: 
+WorkingDirectory=/home/slambot-rpi
+# CHANGED: Ensure this path matches where you saved the python script
+ExecStart=/usr/bin/python3 /home/slambot-rpi/robot_mode_boot.py
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

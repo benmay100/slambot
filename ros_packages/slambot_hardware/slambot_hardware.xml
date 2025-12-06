@@ -1,0 +1,9 @@
+<library path="slambot_hardware">
+  <class name="slambot_hardware/SlambotHardwareInterface"
+         type="slambot_hardware::SlambotSystemHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      The ros2_control hardware interface for Slambot, communicating via Micro-ROS.
+    </description>
+  </class>
+</library>

@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+ <!-- IMU Sensor Link -->
+  <link name="imu_link"/>
+
+  <!-- Joint to connect IMU to the base link -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.047" rpy="0 0 0"/>
+  </joint>
+
+
+</robot>

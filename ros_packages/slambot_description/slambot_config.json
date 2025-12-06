@@ -1,0 +1,35 @@
+{
+  "documentId": "25767c283c099f502a58a313",
+  "outputFormat": "urdf",
+  "packageName": "slambot_description",
+  "robotName": "slambot",
+  "assemblyName": "Assembly_slambot_sim",
+  "export_stl_with_meters": true,
+  "set_zero_mass_to_fixed": false,
+  "default_joint_type": "continuous",
+  "mesh_output_format": "stl",
+  "joint_properties": {
+      "default": {
+          "max_effort": 100,
+          "max_velocity": 100
+      },
+      "dof_rear_right_wheel": { 
+          "type": "revolute"
+      },
+      "dof_rear_left_wheel": { 
+          "type": "revolute"
+      },
+      "dof_front_right_wheel": { 
+          "type": "revolute"
+      },
+      "dof_front_left_wheel": { 
+          "type": "revolute"
+      },
+      "dof_lidar": {
+          "type": "fixed"
+      },
+      "dof_camera": {
+          "type": "fixed"
+      }
+  }
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>slambot_gazebo</name>
+  <version>0.1.0</version>
+  <description>Gazebo and ROS-Gazebo integration assets for simulating the Slambot platform.</description>
+  <maintainer email="benalexandermay@gmail.com">ben-may</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <!--Make sure to add these in!-->
+  <depend>rclcpp</depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>ros_gz</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>rviz_imu_plugin</exec_depend>
+  <exec_depend>slambot_localization</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <gazebo_ros gazebo_media_path="${prefix}/models"/>
+  </export>
+
+</package>

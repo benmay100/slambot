@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>slambot_bringup</name>
+  <version>0.1.0</version>
+  <description>Launch files and runtime orchestration for bringing Slambot up in real and simulated environments.</description>
+  <maintainer email="benalexandermay@gmail.com">ben-may</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <exec_depend>slambot_gazebo</exec_depend>
+  <exec_depend>slambot_description</exec_depend>
+  <exec_depend>slambot_slam</exec_depend>
+  <exec_depend>slambot_localization</exec_depend>
+  <exec_depend>slambot_nav2</exec_depend>
+  <exec_depend>slambot_scripts</exec_depend>
+  <exec_depend>micro_ros_agent</exec_depend>
+  <exec_depend>twist_mux</exec_depend>
+  <exec_depend>twist_stamper</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>ros2_control</exec_depend>
+  <exec_depend>ros2_controllers</exec_depend>
+  <exec_depend>joy</exec_depend>
+  <exec_depend>teleop_twist_joy</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
