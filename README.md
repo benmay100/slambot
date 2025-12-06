@@ -225,11 +225,11 @@ ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 baudrate=1152
 This is a more complex operation when running Ubuntu, so see the full guide in [GetPiCamWorkingOnRaspberryPi_WithUbuntu.pdf](docs/GetPiCamWorkingOnRaspberryPi_WithUbuntu.pdf)
 
 ### Step 8: Edit the config.txt file on the Raspberry Pi
-See the file with all necessary changes [HERE](scripts/config.txt)
+See the file with all necessary changes [HERE](scripts/raspberry_pi_setup/config.txt)
 
 ### Step 9: Create a boot script to allow you to boot into different modes
 
-The good news is, the script is already here [robot_mode_boot.py](scripts/robot_mode_boot.py)
+The good news is, the script is already here [robot_mode_boot.py](scripts/raspberry_pi_setup/robot_mode_boot.py)
 So just do this:
 ```python
 cp ~/slambot_pi_ws/src/scripts/robot_mode_boot.py ~/
