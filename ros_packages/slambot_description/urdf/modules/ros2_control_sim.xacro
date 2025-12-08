@@ -1,68 +1,57 @@
-
-
-<!-- ==============================================================================-->
-
-
-
-
-<!-- IMPORTANT - IMPORTANT - IMPORTANT - IMPORTANT - IMPORTANT -->
-
-<!-- THIS FILE IS NO LONGER USED, SEE 'ros2_control_sim.xacro' INSTEAD-->
-
-<!-- THIS FILE WAS WHAT WE USED BEFORE WE IMPLEMENTED ROS2 CONTROL! -->
-
-
-
-
-
-<!-- ==============================================================================-->
-
-
-
 <?xml version="1.0" ?>
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+<!-- IMPORTANT - WE WILL USE ROS2_CONTROL FOR THE DIFF-DRIVE CONTROLLER, AND GAZEBO PLUGINS FOR THE OTHER SENSORS-->
+<!-- WE WILL DO THIS SO THE ROBOTS KINEMATICS BEHAVIOUR IS AS CLOSE IN SIM AS POSSIBLE TO HOW IT BEHAVE IN REAL LIFE-->
 
-<!-- =============== DiffDrive =============== -->
+
+<!-- =============== DiffDrive (Using the ROS2_CONTROL diff-drive-controller!!)=============== -->
+
+    <ros2_control name="slambot" type="system">
+        <hardware>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+        </hardware>
+        <joint name="front_left_wheel_joint">
+            <command_interface name="velocity"/>
+            <state_interface name="velocity"/>
+            <state_interface name="position"/>
+        </joint>
+        <joint name="rear_left_wheel_joint">
+            <command_interface name="velocity"/>
+            <state_interface name="velocity"/>
+            <state_interface name="position"/>
+        </joint>
+        <joint name="front_right_wheel_joint">
+            <command_interface name="velocity"/>
+            <state_interface name="velocity"/>
+            <state_interface name="position"/>
+        </joint>
+        <joint name="rear_right_wheel_joint">
+            <command_interface name="velocity"/>
+            <state_interface name="velocity"/>
+            <state_interface name="position"/>
+        </joint>
+    </ros2_control>
+
     <gazebo>
-        <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
-            <!--wheels-->
-            <left_joint>front_left_wheel_joint</left_joint>
-            <left_joint>rear_left_wheel_joint</left_joint>
-            <right_joint>front_right_wheel_joint</right_joint>
-            <right_joint>rear_right_wheel_joint</right_joint>
-            <!--kinematics-->
-            <wheel_separation>0.198</wheel_separation>
-            <wheel_radius>0.034</wheel_radius>
-            <!--limits-->
-            <max_linear_acceleration>0.4</max_linear_acceleration> <!-- Smooth ramp-up linear -->
-            <min_linear_acceleration>-0.4</min_linear_acceleration> <!-- Snappy braking linear -->
-            <max_angular_acceleration>1</max_angular_acceleration> <!-- Smooth ramp-up turning -->
-            <min_angular_acceleration>-1</min_angular_acceleration> <!-- Snappy stop turning -->
-            <max_linear_velocity>0.2</max_linear_velocity> <!-- Matches real robot max linear velocity -->
-            <max_angular_velocity>2.02</max_angular_velocity> <!-- Matches real robot max angular velocity -->
-            <!--topics, frames and odometry-->
-            <topic>/cmd_vel</topic>
-            <tf_topic>/tf</tf_topic>
-            <odom_topic>/odom</odom_topic>
-            <frame_id>odom</frame_id> <!--Best to use prefixes and to set the prefix on the RVIZ config too, see xacro_properties.xacro for where to change these -->
-            <child_frame_id>base_footprint</child_frame_id>  <!--Best to use prefixes and to set the prefix on the RVIZ config too, see xacro_properties.xacro for where to change these -->
-            <odom_publisher_frequency>30</odom_publisher_frequency>
+        <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <ros>
+            <remapping>diff_drive_controller/cmd_vel:=/cmd_vel_stamped</remapping> <!-- CRITICAL WE DO THIS - SEE BELOW FOR WHY-->
+            <remapping>diff_drive_controller/odom:=/odom</remapping> <!-- CRITICAL WE DO THIS - SEE BELOW FOR WHY-->
+            </ros>
+            <parameters>$(find slambot_bringup)/config/slambot_controllers.yaml</parameters>
         </plugin>
     </gazebo>
 
-    <gazebo>
-        <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
-            <topic>joint_states</topic>
-            <joint_name>front_left_wheel_joint</joint_name>
-            <joint_name>front_right_wheel_joint</joint_name>
-            <joint_name>rear_left_wheel_joint</joint_name>
-            <joint_name>rear_right_wheel_joint</joint_name> 
-        </plugin>
-    </gazebo>
+<!-- WHY THE REMAPS: The ros2_control diff-drive-controller listens on private topics (e.g. 'diff_drive_controller/cmd_vel') whereas the rest of our program expects 'cmd_vel' (especially Nav2!) so we MUST remap this here to ensure everything works up stream-->
 
 <!--=========================================-->
+
+
+
+
+<!-- =========== GAZEBO PLUGINS ============ -->
 
 
 <!-- IF USING SENSORS MUST INCLUDE THE BELOW -->
@@ -77,7 +66,6 @@
         </plugin>
 
     </gazebo>
-
 
 
 <!-- =========== Lidar Sensor ============ -->

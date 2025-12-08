@@ -212,6 +212,16 @@ def generate_launch_description():
         remappings=[("cmd_vel_out", "/cmd_vel")] 
     )
 
+    twist_stamper_node = Node(
+        package='twist_stamper',
+        executable='twist_stamper',
+        name='twist_stamper',
+        remappings=[
+            ('cmd_vel_in', '/cmd_vel'),
+            ('cmd_vel_out', '/cmd_vel_stamped')
+        ]
+    )
+
     # Start the 'joy' driver node, *if* using_joy is true
     joy_node = Node(
         package='joy',
@@ -257,6 +267,7 @@ def generate_launch_description():
     ld.add_action(start_rviz_cmd)
     ld.add_action(start_gz_cmd)
     ld.add_action(twist_mux_node)
+    ld.add_action(twist_stamper_node)
     ld.add_action(joy_node)
     ld.add_action(teleop_twist_joy_node)
     ld.add_action(start_slam_cmd)

@@ -9,7 +9,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
@@ -22,6 +22,7 @@ def generate_launch_description():
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
     pkg_slambot_description = get_package_share_directory('slambot_description')
     pkg_slambot_localization = get_package_share_directory('slambot_localization')
+    pkg_slambot_bringup = get_package_share_directory('slambot_bringup')
 
 
     # ================== Declare Launch Arguments =================== #
@@ -52,6 +53,8 @@ def generate_launch_description():
 
     # Path to the correct ros_gz_bridge yaml file 
     ros_gz_bridge_params_file = os.path.join(pkg_slambot_gazebo, 'config', 'ros_gz_bridge.yaml')
+    # Path to the correct twist_mux config file
+    twist_mux_file = os.path.join(pkg_slambot_bringup, 'config', 'twist_mux.yaml')
 
 
     
@@ -140,6 +143,39 @@ def generate_launch_description():
         output='screen'
     )
 
+
+   # ================== Start ROS2 Control Nodes ==================== #
+
+    joint_state_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster', '--controller-manager', '/controller_manager'],
+    )
+
+    diff_drive_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['diff_drive_controller', '--controller-manager', '/controller_manager'],
+    )
+
+    # Not used as we rely on the gazebo imu plugin to publish imu data in simulation
+    # imu_sensor_spawner = Node(
+    #     package='controller_manager',
+    #     executable='spawner',
+    #     arguments=['imu_sensor_broadcaster', '--controller-manager', '/controller_manager'],
+    # )
+
+    delayed_spawners = TimerAction(
+        period=3.0,
+        actions=[
+            joint_state_broadcaster_spawner,
+            diff_drive_spawner,
+            # imu_sensor_spawner
+        ]
+    )
+
+
+
     # ================== Create Launch Description =================== #
     
     ld = LaunchDescription()
@@ -157,5 +193,6 @@ def generate_launch_description():
     ld.add_action(start_ros_gz_bridge_cmd)
     ld.add_action(start_ekf_localization_cmd)
     ld.add_action(spawn_robot_cmd)
+    ld.add_action(delayed_spawners)
 
     return ld

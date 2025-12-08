@@ -11,7 +11,8 @@
     <xacro:include filename="modules/lidar.xacro" />
 
     <xacro:if value="$(arg using_sim)">
-        <xacro:include filename="gazebo/gazebo_plugins.xacro" />
+        <!--<xacro:include filename="gazebo/gazebo_plugins.xacro" />--> <!-- REPLACED BY THE NEW ros2_control_sim.xacro MODULE -->
+        <xacro:include filename="modules/ros2_control_sim.xacro" />
         <xacro:include filename="modules/imu_sim.xacro" />
     </xacro:if>
 
@@ -20,7 +21,7 @@
         <xacro:include filename="modules/imu_real.xacro" />
     </xacro:unless>
 
-    <!-- ... inside the launch file ...
+    <!-- ... inside the launch file we then use commands such as this ...
     
     xacro_file = os.path.join(get_package_share_directory('slambot_description'), 'urdf', 'slambot.urdf.xacro')
     

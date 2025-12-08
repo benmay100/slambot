@@ -19,37 +19,38 @@
   gz_type_name: "gz.msgs.Clock"
   direction: GZ_TO_ROS
 
-- ros_topic_name: "/joint_states"  #gz topic published by JointState plugin
-  gz_topic_name: "/joint_states"
-  ros_type_name: "sensor_msgs/msg/JointState"
-  gz_type_name: "gz.msgs.Model"
-  direction: GZ_TO_ROS
+# REMOVED AS NOW HANDLED BY ROS2_CONTROL JOINT STATE CONTROLLER, NOT GAZEBO PLUGIN
+
+# - ros_topic_name: "/joint_states"  #gz topic published by JointState plugin
+#   gz_topic_name: "/joint_states"
+#   ros_type_name: "sensor_msgs/msg/JointState"
+#   gz_type_name: "gz.msgs.Model"
+#   direction: GZ_TO_ROS
+
 
 #==============================================
 
 
 #Use if a mobile base you want to control
 
-- ros_topic_name: "/cmd_vel" #gz topic published by DiffDrive plugin
-  gz_topic_name: "/cmd_vel"
-  ros_type_name: "geometry_msgs/msg/Twist"
-  gz_type_name: "gz.msgs.Twist"
-  direction: ROS_TO_GZ
+# ALL REMOVED AS NOW HANDLED BY ROS2_CONTROL DIFF-DRIVE CONTROLLER, NOT GAZEBO DIFF-DRIVE PLUGIN
 
-# Removed, as we are using a localization (ekf) node to handle all publishing to /tf topics
-# - ros_topic_name: "/tf"  #gz topic published by DiffDrive plugin
-#   gz_topic_name: "/tf"
-#   ros_type_name: "tf2_msgs/msg/TFMessage"
-#   gz_type_name: "gz.msgs.Pose_V"
+# - ros_topic_name: "/cmd_vel" #gz topic published by DiffDrive plugin
+#   gz_topic_name: "/cmd_vel"
+#   ros_type_name: "geometry_msgs/msg/Twist"
+#   gz_type_name: "gz.msgs.Twist"
+#   direction: ROS_TO_GZ
+
+# - ros_topic_name: "/odom" #gz topic published by DiffDrive plugin
+#   gz_topic_name: "/odom"
+#   ros_type_name: "nav_msgs/msg/Odometry"
+#   gz_type_name: "gz.msgs.Odometry"
 #   direction: GZ_TO_ROS
 
-- ros_topic_name: "/odom" #gz topic published by DiffDrive plugin
-  gz_topic_name: "/odom"
-  ros_type_name: "nav_msgs/msg/Odometry"
-  gz_type_name: "gz.msgs.Odometry"
-  direction: GZ_TO_ROS
 
 #==============================================
+
+# THESE ARE LEFT IN, AS STILL HANDLED BY GAZEBO PLUGINS
 
 #Used for lidar
 - ros_topic_name: "/scan"
